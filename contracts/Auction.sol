@@ -45,6 +45,7 @@ contract Auction {
         string item_desc;
         string secret_string;
         uint256 asking_price;
+        uint256 final_price;
         mapping(bytes32 => bool) hashedBids;
         Bidder[] verifiedBids;
         Bidder bidWinner;
@@ -122,7 +123,7 @@ contract Auction {
         itemsList[itemsCount].asking_price = _asking_price;
         itemsList[itemsCount].status = ITEM_STATUS.OPEN;
         itemsList[itemsCount].auctionStatus = AUCTION_STATUS.ONGOING;
-        itemsList[itemsCount].auctionType = AUCTION_TYPE.FIRST_PRICE; // take argument
+        itemsList[itemsCount].auctionType = AUCTION_TYPE.FIRST_PRICE;
         return itemsCount;
     }
 
@@ -179,6 +180,14 @@ contract Auction {
         );
     }
 
+    function abs(uint256 a, uint256 b) private pure returns (uint256) {
+        if (a >= b) {
+            return a - b;
+        } else {
+            return b - a;
+        }
+    }
+
     function revealBid(uint256 item_id) public {
         require(
             item_id <= itemsCount && item_id > 0,
@@ -190,18 +199,53 @@ contract Auction {
         );
 
         uint256 maxBid = 0;
-        uint256 winnerInd;
+        Bidder memory maxBidder;
+        uint256 secondMaxBid = 0;
+        uint256 avgBid = 0;
+
         for (uint256 i = 0; i < itemsList[item_id].verifiedBids.length; i++) {
             uint256 currentBidPrice = itemsList[item_id].verifiedBids[i].price;
+            avgBid += currentBidPrice;
+
             if (currentBidPrice > maxBid) {
+                secondMaxBid = maxBid;
                 maxBid = currentBidPrice;
-                winnerInd = i;
+                maxBidder = itemsList[item_id].verifiedBids[i];
+            } else if (currentBidPrice > secondMaxBid) {
+                secondMaxBid = currentBidPrice;
             }
         }
 
-        itemsList[item_id].bidWinner = itemsList[item_id].verifiedBids[
-            winnerInd
-        ];
+        avgBid /= itemsList[item_id].verifiedBids.length;
+
+        if (itemsList[item_id].auctionType == AUCTION_TYPE.FIRST_PRICE) {
+            itemsList[item_id].bidWinner = maxBidder;
+            itemsList[item_id].final_price = maxBid;
+        } else if (
+            itemsList[item_id].auctionType == AUCTION_TYPE.SECOND_PRICE
+        ) {
+            itemsList[item_id].bidWinner = maxBidder;
+            itemsList[item_id].final_price = secondMaxBid;
+        } else {
+            uint256 minDiff = 0;
+            Bidder memory avgBidder;
+            for (
+                uint256 i = 0;
+                i < itemsList[item_id].verifiedBids.length;
+                i++
+            ) {
+                uint256 currentBidPrice = itemsList[item_id]
+                    .verifiedBids[i]
+                    .price;
+                if (abs(currentBidPrice, avgBid) < minDiff) {
+                    avgBidder = itemsList[item_id].verifiedBids[i];
+                }
+
+                itemsList[item_id].bidWinner = avgBidder;
+                itemsList[item_id].final_price = avgBidder.price;
+            }
+        }
+
         itemsList[item_id].status = ITEM_STATUS.BUYING;
         itemsList[itemsCount].auctionStatus = AUCTION_STATUS.REVEALED;
     }
@@ -247,13 +291,27 @@ contract Auction {
         );
         itemsList[item_id].secret_string = secret_string;
         itemsList[item_id].status = ITEM_STATUS.BOUGHT;
-        itemsList[item_id].seller.transfer(itemsList[item_id].bidWinner.price);
+        itemsList[item_id].seller.transfer(itemsList[item_id].final_price);
         // return pending money of bid winner like in case of auction type 2
         returnNonWinnerMoney(item_id);
+        returnWinnerPendingMoney(item_id);
+    }
+
+    function returnWinnerPendingMoney(uint256 item_id) private {
+        uint256 pendingMoney = itemsList[item_id].bidWinner.price -
+            itemsList[item_id].final_price;
+        itemsList[item_id].bidWinner.buyer.transfer(pendingMoney);
     }
 
     function returnNonWinnerMoney(uint256 item_id) private {
         for (uint256 i = 0; i < itemsList[item_id].verifiedBids.length; i++) {
+            if (
+                itemsList[item_id].verifiedBids[i].buyer ==
+                itemsList[item_id].bidWinner.buyer
+            ) {
+                continue;
+            }
+
             uint256 returnPrice = itemsList[item_id].verifiedBids[i].price;
             itemsList[item_id].verifiedBids[i].buyer.transfer(returnPrice);
         }
