@@ -113,7 +113,8 @@ contract Auction {
     function addItem(
         string memory _item_name,
         string memory _item_desc,
-        uint256 _asking_price
+        uint256 _asking_price,
+        uint256 _auction_type
     ) public returns (uint256) {
         itemsCount++;
         itemsList[itemsCount].status = ITEM_STATUS.LOCKED;
@@ -123,7 +124,13 @@ contract Auction {
         itemsList[itemsCount].asking_price = _asking_price;
         itemsList[itemsCount].status = ITEM_STATUS.OPEN;
         itemsList[itemsCount].auctionStatus = AUCTION_STATUS.ONGOING;
-        itemsList[itemsCount].auctionType = AUCTION_TYPE.FIRST_PRICE;
+        if (_auction_type == 0) {
+            itemsList[itemsCount].auctionType = AUCTION_TYPE.FIRST_PRICE;
+        } else if (_auction_type == 1) {
+            itemsList[itemsCount].auctionType = AUCTION_TYPE.SECOND_PRICE;
+        } else {
+            itemsList[itemsCount].auctionType = AUCTION_TYPE.AVG_PRICE;
+        }
         return itemsCount;
     }
 
