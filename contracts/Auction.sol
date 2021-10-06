@@ -201,11 +201,11 @@ contract Auction {
         uint256 maxBid = 0;
         Bidder memory maxBidder;
         uint256 secondMaxBid = 0;
-        uint256 avgBid = 0;
+        uint256 totalBid = 0;
 
         for (uint256 i = 0; i < itemsList[item_id].verifiedBids.length; i++) {
             uint256 currentBidPrice = itemsList[item_id].verifiedBids[i].price;
-            avgBid += currentBidPrice;
+            totalBid += currentBidPrice;
 
             if (currentBidPrice > maxBid) {
                 secondMaxBid = maxBid;
@@ -215,8 +215,6 @@ contract Auction {
                 secondMaxBid = currentBidPrice;
             }
         }
-
-        avgBid /= itemsList[item_id].verifiedBids.length;
 
         if (itemsList[item_id].auctionType == AUCTION_TYPE.FIRST_PRICE) {
             itemsList[item_id].bidWinner = maxBidder;
@@ -229,15 +227,12 @@ contract Auction {
         } else {
             uint256 minDiff = 0;
             Bidder memory avgBidder;
-            for (
-                uint256 i = 0;
-                i < itemsList[item_id].verifiedBids.length;
-                i++
-            ) {
+            uint256 n = itemsList[item_id].verifiedBids.length;
+            for (uint256 i = 0; i < n; i++) {
                 uint256 currentBidPrice = itemsList[item_id]
                     .verifiedBids[i]
-                    .price;
-                if (abs(currentBidPrice, avgBid) < minDiff) {
+                    .price * n;
+                if (abs(currentBidPrice, totalBid) < minDiff) {
                     avgBidder = itemsList[item_id].verifiedBids[i];
                 }
 
@@ -248,6 +243,7 @@ contract Auction {
 
         itemsList[item_id].status = ITEM_STATUS.BUYING;
         itemsList[itemsCount].auctionStatus = AUCTION_STATUS.REVEALED;
+        returnNonWinnerMoney(item_id);
     }
 
     /**
@@ -293,7 +289,6 @@ contract Auction {
         itemsList[item_id].status = ITEM_STATUS.BOUGHT;
         itemsList[item_id].seller.transfer(itemsList[item_id].final_price);
         // return pending money of bid winner like in case of auction type 2
-        returnNonWinnerMoney(item_id);
         returnWinnerPendingMoney(item_id);
     }
 
