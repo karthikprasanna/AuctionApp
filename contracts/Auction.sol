@@ -177,10 +177,9 @@ contract Auction {
         bytes32 hashValue = keccak256(
             abi.encodePacked(msg.sender, password, msg.value)
         );
-        require(
-            itemsList[item_id].hashedBids[hashValue] == true,
-            "Invalid details"
-        );
+        if(itemsList[item_id].hashedBids[hashValue] != true){
+            revert("Invalid details");
+        }
 
         itemsList[item_id].verifiedBids.push(
             Bidder(msg.sender, msg.value, public_key)
