@@ -24,7 +24,7 @@ contract Auction {
     enum AUCTION_STATUS {
         ONGOING,
         VERIFICATION,
-        REVEALED
+        REVEALED,
     }
 
     enum AUCTION_TYPE {
