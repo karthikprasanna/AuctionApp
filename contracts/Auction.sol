@@ -188,7 +188,7 @@ contract Auction {
         }
     }
 
-    function revealBid(uint256 item_id) public {
+    function revealBid(uint256 item_id) public payable {
         require(
             item_id <= itemsCount && item_id > 0,
             "Item not present in list"
