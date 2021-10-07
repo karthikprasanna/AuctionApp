@@ -1,4 +1,5 @@
-import EthCrypto from 'eth-crypto';
+// import EthCrypto from 'eth-crypto';
+const keccak256 = require('keccak256')
 
 App = {
     loading: false,
@@ -104,6 +105,27 @@ App = {
      */
     changeItemName: async(item_id, new_name) => {
         await App.auction.changeName(item_id, new_name, { from: web3.eth.accounts[0] });
+    },
+
+    /**
+     * 
+     * @param {uint} item_id 
+     * @param {string} password 
+     * @param {uint} bidValue 
+     */
+    bidItem: async(item_id, password, bidValue) => {
+        toHash = web3.eth.accounts[0].toString() +  password + bidValue.toString()
+        hashString = createHash(toHash);
+        await App.auction.bidItem(item_id, hashString, { from: web3.eth.accounts[0] });
+    },
+
+    /**
+     * 
+     * @param {string} toHash 
+     * @returns hashedString
+     */
+    createHash: async(toHash) => {
+        return keccak256(toHash);
     }
 
 }
