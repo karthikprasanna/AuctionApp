@@ -1,4 +1,4 @@
-// import EthCrypto from 'eth-crypto';
+import EthCrypto from 'eth-crypto';
 const keccak256 = require('keccak256')
 
 App = {
@@ -109,9 +109,9 @@ App = {
 
     /**
      * 
-     * @param {uint} item_id 
-     * @param {string} password 
-     * @param {uint} bidValue 
+     * @param {uint} item_id id of the item-listing to be bid
+     * @param {string} password random string to create bid hash
+     * @param {uint} bidValue bid value
      */
     bidItem: async(item_id, password, bidValue) => {
         toHash = web3.eth.accounts[0].toString() +  password + bidValue.toString()
@@ -121,11 +121,22 @@ App = {
 
     /**
      * 
-     * @param {string} toHash 
+     * @param {string} toHash string to be hashed
      * @returns hashedString
      */
     createHash: async(toHash) => {
         return keccak256(toHash);
+    },
+
+    /**
+     * 
+     * @param {uint} item_id id of the item-listing whose bid is to be verified
+     * @param {string} password random string entered at time of bidding
+     * @param {uint} bidValue bid value proposed at time of bidding
+     * @param {string} public_key eth crypto public key
+     */
+    verifyBid: async(item_id, password, bidValue, public_key) => {
+        await App.auction.verifyBid(item_id, password, public_key, { from: web3.eth.accounts[0], value: bidValue });
     }
 
 }
