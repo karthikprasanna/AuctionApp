@@ -25,11 +25,13 @@ const App = (props) =>  {
           SimpleStorageContract.abi,
           deployedNetwork && deployedNetwork.address,
         );
+        const response = await instance.methods.get().call();
+        console.log(response)
 
         // Set web3, accounts, and contract to the state, and then proceed with an
         // example of interacting with the contract's methods.
-        setCommonState({ ...commonState, web3, accounts, contract: instance });
-        console.log({ ...commonState, web3, accounts, contract: instance })
+        setCommonState({  storageValue: response, web3, accounts, contract: instance });
+        console.log({ storageValue: response, web3, accounts, contract: instance })
       } catch (error) {
         // Catch any errors for any of the above operations.
         alert(
