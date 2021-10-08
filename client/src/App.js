@@ -1,19 +1,24 @@
 import React, { useState, useEffect, createContext } from "react";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
+import FadeIn from "react-fade-in";
+import Lottie from "react-lottie";
 
 import getWeb3 from "./getWeb3";
 import AuctionContract from "./contracts/Auction.json";
-import Routes from "./pages/Routes";
+import Layout from "./pages/Layout";
+import * as loader from "./assets/loader.json";
 
+import "antd/dist/antd.dark.css";
 import "./App.css";
 
-export const BlkContext = createContext();
+export const BlockchainContext = createContext();
 
 const App = (props) => {
   const [blockchain, setBlockchain] = useState({
     web3: null,
     accounts: null,
     contract: null,
+    userAccount: null,
   });
 
   useEffect(() => {
@@ -33,9 +38,12 @@ const App = (props) => {
           deployedNetwork && deployedNetwork.address
         );
 
+        let userAccount = await web3.eth.getCoinbase();
+
         // Set web3, accounts, and contract to the state, and then proceed with an
         // example of interacting with the contract's methods.
-        setBlockchain({ web3, accounts, contract });
+        setBlockchain({ web3, accounts, contract, userAccount });
+        console.log({ web3, accounts, contract, userAccount });
       } catch (error) {
         // Catch any errors for any of the above operations.
         alert(
@@ -47,13 +55,48 @@ const App = (props) => {
     init();
   }, []);
 
-  if (blockchain.web3 === null) {
-    return <div>Loading Web3, accounts, and contract...</div>;
-  }
-  return (
-    <BlkContext.Provider value={blockchain}>
-      <Routes />
-    </BlkContext.Provider>
+  const defaultOptions = {
+    loop: true,
+    autoplay: true,
+    animationData: loader.default,
+    rendererSettings: {
+      preserveAspectRatio: "xMidYMid slice",
+    },
+  };
+
+  const [load, setLoad] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setLoad(true);
+    }, 2000);
+  }, []);
+
+  return blockchain.web3 === null || !load ? (
+    <div
+      style={{
+        height: "100vh",
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <FadeIn>
+        <div>
+          <Lottie options={defaultOptions} height={320} width={320} />
+        </div>
+      </FadeIn>
+      <div style={{ textAlign: "center", position: "fixed", bottom: "20px" }}>
+        Loading Web3, accounts, and contract
+      </div>
+    </div>
+  ) : (
+    <FadeIn>
+      <BlockchainContext.Provider value={blockchain}>
+        <Layout />
+      </BlockchainContext.Provider>
+    </FadeIn>
   );
 };
 
