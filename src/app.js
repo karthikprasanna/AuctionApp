@@ -66,11 +66,12 @@ App = {
      * 
      * @param {string} item_name name of the item 
      * @param {string} item_description description of the item 
-     * @param {uint} asking_price price (no need) 
+     * @param {uint} asking_price price (no need??) 
+     * @param {uint} bid_type 0 = first, 1 = second, 2 = mean, 3 = fixed
      */
-    addItem: async(item_name, item_description, asking_price) => {
+    addItem: async(item_name, item_description, asking_price, bid_type) => {
         // seller use case to add an item
-        let index_id = (await App.auction.addItem(item_name, item_description, { from: web3.eth.accounts[0] })).toNumber();
+        let index_id = (await App.auction.addItem(item_name, item_description, asking_price, bid_type, { from: web3.eth.accounts[0] })).toNumber();
         return index_id;
     },
 
@@ -114,7 +115,7 @@ App = {
      * @param {uint} bidValue bid value
      */
     bidItem: async(item_id, password, bidValue) => {
-        toHash = web3.eth.accounts[0].toString() +  password + bidValue.toString()
+        toHash = web3.eth.accounts[0].toString() + password + bidValue.toString()
         hashString = createHash(toHash);
         await App.auction.bidItem(item_id, hashString, { from: web3.eth.accounts[0] });
     },
