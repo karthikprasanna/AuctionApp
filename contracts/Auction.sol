@@ -24,13 +24,14 @@ contract Auction {
     enum AUCTION_STATUS {
         ONGOING,
         VERIFICATION,
-        REVEALED,
+        REVEALED
     }
 
     enum AUCTION_TYPE {
         FIRST_PRICE,
         SECOND_PRICE,
-        AVG_PRICE
+        AVG_PRICE,
+        FIXED
     }
 
     /**
@@ -147,7 +148,7 @@ contract Auction {
         itemsList[item_id].hashedBids[hashString] = true;
     }
 
-    function closeBid(uint256 item_id) public {
+    function closeBid(uint256 item_id) public onlyItemSeller(item_id) {
         require(
             item_id <= itemsCount && item_id > 0,
             "Item not present in list"
@@ -194,7 +195,7 @@ contract Auction {
         }
     }
 
-    function revealBid(uint256 item_id) public payable {
+    function revealBid(uint256 item_id) public payable onlyItemSeller(item_id){
         require(
             item_id <= itemsCount && item_id > 0,
             "Item not present in list"
@@ -441,29 +442,89 @@ contract Auction {
      *
      */
     function viewActiveListings() public view returns (string memory) {
-        string memory str = "";
+        string memory str = "[";
         for (uint256 i = 1; i <= itemsCount; i++) {
-            if (itemsList[i].status == ITEM_STATUS.OPEN) {
-                str = string(abi.encodePacked(str, "Item-ID: "));
+            if (itemsList[i].auctionStatus == AUCTION_STATUS.ONGOING) {
+                uint at = 0;
+                if(itemsList[i].auctionType == AUCTION_TYPE.SECOND_PRICE){
+                    at=1;
+                }
+                else if(itemsList[i].auctionType == AUCTION_TYPE.AVG_PRICE){
+                    at = 2;
+                }
+                else if(itemsList[i].auctionType == AUCTION_TYPE.FIXED){
+                    at = 3;
+                }
+                uint ast = 0;
+                if(itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION){
+                    ast = 1;
+                }
+                else if(itemsList[i].auctionStatus == AUCTION_STATUS.REVEALED)
+                {
+                    ast = 2;
+                }
+                str = string(abi.encodePacked(str, "{'item-id':"));
                 str = string(abi.encodePacked(str, uintToStr(i)));
-                str = string(abi.encodePacked(str, ", Item Name: "));
+                str = string(abi.encodePacked(str, ",'item-name':"));
                 str = string(abi.encodePacked(str, itemsList[i].item_name));
-                str = string(abi.encodePacked(str, ", Item Desc: "));
+                str = string(abi.encodePacked(str, ",'item-description': "));
                 str = string(abi.encodePacked(str, itemsList[i].item_desc));
-                str = string(abi.encodePacked(str, ", Asking Price: "));
-                str = string(
-                    abi.encodePacked(str, uintToStr(itemsList[i].asking_price))
-                );
-                str = string(abi.encodePacked(str, ", Seller Id: "));
-                str = string(
-                    abi.encodePacked(
-                        str,
-                        toString(abi.encodePacked(itemsList[i].seller))
-                    )
-                );
-                str = string(abi.encodePacked(str, "\n"));
+                str = string(abi.encodePacked(str, ",'asking-price':"));
+                str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
+                str = string(abi.encodePacked(str, ",'auction-type':"));
+                str = string(abi.encodePacked(str, uintToStr(at)));
+                str = string(abi.encodePacked(str, ",'auction-status':"));
+                str = string(abi.encodePacked(str, uintToStr(ast)));
+                str = string(abi.encodePacked(str, ",'seller-id': "));
+                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
+                str = string(abi.encodePacked(str, "},"));
             }
         }
+        str = string(abi.encodePacked(str, "]"));
         return str;
     }
+
+    function viewSellerListings(address seller_id) public view returns (string memory) {
+        string memory str = "[";
+        for (uint256 i = 1; i <= itemsCount; i++) {
+            if (itemsList[i].seller == seller_id) {
+                uint at = 0;
+                if(itemsList[i].auctionType == AUCTION_TYPE.SECOND_PRICE){
+                    at=1;
+                }
+                else if(itemsList[i].auctionType == AUCTION_TYPE.AVG_PRICE){
+                    at = 2;
+                }
+                else if(itemsList[i].auctionType == AUCTION_TYPE.FIXED){
+                    at = 3;
+                }
+                uint ast = 0;
+                if(itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION){
+                    ast = 1;
+                }
+                else if(itemsList[i].auctionStatus == AUCTION_STATUS.REVEALED)
+                {
+                    ast = 2;
+                }
+                
+                str = string(abi.encodePacked(str, "{'item-id':"));
+                str = string(abi.encodePacked(str, uintToStr(i)));
+                str = string(abi.encodePacked(str, ",'item-name':"));
+                str = string(abi.encodePacked(str, itemsList[i].item_name));
+                str = string(abi.encodePacked(str, ",'item-description': "));
+                str = string(abi.encodePacked(str, itemsList[i].item_desc));
+                str = string(abi.encodePacked(str, ",'asking-price':"));
+                str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
+                str = string(abi.encodePacked(str, ",'auction-type':"));
+                str = string(abi.encodePacked(str, uintToStr(at)));
+                str = string(abi.encodePacked(str, ",'auction-status':"));
+                str = string(abi.encodePacked(str, uintToStr(ast)));
+                str = string(abi.encodePacked(str, ",'seller-id': "));
+                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
+                str = string(abi.encodePacked(str, "},"));
+            }
+        }
+        str = string(abi.encodePacked(str, "]"));
+        return str;
+    }    
 }
