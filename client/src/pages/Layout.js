@@ -18,12 +18,13 @@ const Routes = (props) => {
         <Content
           className="site-layout"
           style={{
-            padding: "0 50px",
+            padding: "50px 50px",
             marginTop: 64,
             minHeight: "80vh",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "center",
+            flexDirection: "column",
           }}
         >
           <Switch>
