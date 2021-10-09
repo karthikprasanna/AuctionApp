@@ -155,6 +155,12 @@ App = {
     getSellerList: async(current_account) => {
         let rst = await App.auction.viewSellerListings(current_account);
         return JSON.parse(rst);
+    },
+
+    buyNormalItem: async(id, random_string, public_key, val) => {
+        // no use of random string 
+        await App.auction.verifyBid(id, random_string, public_key, { from: web3.eth.accounts[0], value: val });
+
     }
 }
 
