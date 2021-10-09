@@ -13,6 +13,7 @@ const Chip = ({ text, onClick }) => {
         height: "100%",
         background: "rgba(79, 130, 179, 0.12)",
         userSelect: "none",
+        fontWeight: "bolder",
       }}
       onClick={onClick && (() => onClick())}
     >

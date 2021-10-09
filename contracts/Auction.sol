@@ -482,21 +482,29 @@ contract Auction {
                 {
                     ast = 2;
                 }
-                str = string(abi.encodePacked(str, "{'item-id':"));
+                
+                str = string(abi.encodePacked(str, '{"itemId":'));
                 str = string(abi.encodePacked(str, uintToStr(i)));
-                str = string(abi.encodePacked(str, ",'item-name':'"));
+                str = string(abi.encodePacked(str, ',"itemName":"'));
                 str = string(abi.encodePacked(str, itemsList[i].item_name));
-                str = string(abi.encodePacked(str, "','item-description': '"));
+                str = string(abi.encodePacked(str, '","itemDescription": "'));
                 str = string(abi.encodePacked(str, itemsList[i].item_desc));
-                str = string(abi.encodePacked(str, "','asking-price':"));
+                str = string(abi.encodePacked(str, '","askingPrice":'));
                 str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
-                str = string(abi.encodePacked(str, ",'auction-type':"));
+                str = string(abi.encodePacked(str, ',"auctionType":'));
                 str = string(abi.encodePacked(str, uintToStr(at)));
-                str = string(abi.encodePacked(str, ",'auction-status':"));
+                str = string(abi.encodePacked(str, ',"auctionStatus":'));
                 str = string(abi.encodePacked(str, uintToStr(ast)));
-                str = string(abi.encodePacked(str, ",'seller-id': '"));
+                str = string(abi.encodePacked(str, ',"sellerId": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
-                str = string(abi.encodePacked(str, "'},"));
+                if(i != itemsCount)
+                {
+                    str = string(abi.encodePacked(str, '"},'));
+                }
+                else
+                {
+                    str = string(abi.encodePacked(str, '"}'));
+                }
             }
         }
         str = string(abi.encodePacked(str, "]"));
@@ -526,21 +534,28 @@ contract Auction {
                     ast = 2;
                 }
                 
-                str = string(abi.encodePacked(str, "{'item-id':"));
+                str = string(abi.encodePacked(str, '{"itemId":'));
                 str = string(abi.encodePacked(str, uintToStr(i)));
-                str = string(abi.encodePacked(str, ",'item-name':'"));
+                str = string(abi.encodePacked(str, ',"itemName":"'));
                 str = string(abi.encodePacked(str, itemsList[i].item_name));
-                str = string(abi.encodePacked(str, "','item-description': '"));
+                str = string(abi.encodePacked(str, '","itemDescription": "'));
                 str = string(abi.encodePacked(str, itemsList[i].item_desc));
-                str = string(abi.encodePacked(str, "','asking-price':"));
+                str = string(abi.encodePacked(str, '","askingPrice":'));
                 str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
-                str = string(abi.encodePacked(str, ",'auction-type':"));
+                str = string(abi.encodePacked(str, ',"auctionType":'));
                 str = string(abi.encodePacked(str, uintToStr(at)));
-                str = string(abi.encodePacked(str, ",'auction-status':"));
+                str = string(abi.encodePacked(str, ',"auctionStatus":'));
                 str = string(abi.encodePacked(str, uintToStr(ast)));
-                str = string(abi.encodePacked(str, ",'seller-id': '"));
+                str = string(abi.encodePacked(str, ',"sellerId": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
-                str = string(abi.encodePacked(str, "'},"));
+                if(i != itemsCount)
+                {
+                    str = string(abi.encodePacked(str, '"},'));
+                }
+                else
+                {
+                    str = string(abi.encodePacked(str, '"}'));
+                }
             }
         }
         str = string(abi.encodePacked(str, "]"));

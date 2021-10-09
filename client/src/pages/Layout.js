@@ -22,8 +22,8 @@ const Routes = (props) => {
             marginTop: 64,
             minHeight: "80vh",
             display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "center",
+            alignItems: "center",
+            justifyContent: "flex-start",
             flexDirection: "column",
           }}
         >
