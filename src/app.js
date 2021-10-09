@@ -138,8 +138,24 @@ App = {
      */
     verifyBid: async(item_id, password, bidValue, public_key) => {
         await App.auction.verifyBid(item_id, password, public_key, { from: web3.eth.accounts[0], value: bidValue });
-    }
+    },
 
+    /**
+     * 
+     * @returns json list of all listings open to buy from 
+     */
+    getItemList: async() => {
+        let rst = await App.auction.viewActiveListings();
+        return JSON.parse(rst);
+    },
+    /**
+     * 
+     * @param {string} current_account current account 
+     */
+    getSellerList: async(current_account) => {
+        let rst = await App.auction.viewSellerListings(current_account);
+        return JSON.parse(rst);
+    }
 }
 
 $(() => {
