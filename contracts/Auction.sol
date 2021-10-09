@@ -30,7 +30,8 @@ contract Auction {
     enum AUCTION_TYPE {
         FIRST_PRICE,
         SECOND_PRICE,
-        AVG_PRICE
+        AVG_PRICE,
+        FIXED
     }
 
     /**
@@ -128,8 +129,11 @@ contract Auction {
             itemsList[itemsCount].auctionType = AUCTION_TYPE.FIRST_PRICE;
         } else if (_auction_type == 1) {
             itemsList[itemsCount].auctionType = AUCTION_TYPE.SECOND_PRICE;
-        } else {
+        } else if (_auction_type == 2) {
             itemsList[itemsCount].auctionType = AUCTION_TYPE.AVG_PRICE;
+        } else {
+            itemsList[itemsCount].auctionStatus = AUCTION_STATUS.VERIFICATION;
+            itemsList[itemsCount].auctionType = AUCTION_TYPE.FIXED;
         }
         return itemsCount;
     }
@@ -143,11 +147,14 @@ contract Auction {
             itemsList[item_id].auctionStatus == AUCTION_STATUS.ONGOING,
             "Auction not ongoing"
         );
-
         itemsList[item_id].hashedBids[hashString] = true;
     }
 
     function closeBid(uint256 item_id) public {
+        require(
+            msg.sender == itemsList[item_id].seller || msg.sender == address(this),
+            'Access denied'
+        );
         require(
             item_id <= itemsCount && item_id > 0,
             "Item not present in list"
@@ -156,7 +163,6 @@ contract Auction {
             itemsList[item_id].auctionStatus == AUCTION_STATUS.ONGOING,
             "Auction not ongoing"
         );
-
         itemsList[item_id].auctionStatus = AUCTION_STATUS.VERIFICATION;
     }
 
@@ -173,17 +179,30 @@ contract Auction {
             itemsList[item_id].auctionStatus == AUCTION_STATUS.VERIFICATION,
             "Bid verification not in progress"
         );
+        if(itemsList[item_id].auctionType == AUCTION_TYPE.FIXED){
+            if(msg.value == itemsList[item_id].asking_price){
+                itemsList[item_id].final_price = msg.value;
+                itemsList[item_id].bidWinner = Bidder(msg.sender, msg.value, public_key); 
+                itemsList[item_id].status = ITEM_STATUS.BUYING;
+                itemsList[itemsCount].auctionStatus = AUCTION_STATUS.REVEALED;   // everything is done 
+            }
+            else{
+                revert("Invalid Price");
+            }
+        }
+        else{
+            bytes32 hashValue = keccak256(
+                abi.encodePacked(msg.sender, password, msg.value)
+            );
+            if(itemsList[item_id].hashedBids[hashValue] != true){
+                revert("Invalid details");
+            }
 
-        bytes32 hashValue = keccak256(
-            abi.encodePacked(msg.sender, password, msg.value)
-        );
-        if(itemsList[item_id].hashedBids[hashValue] != true){
-            revert("Invalid details");
+            itemsList[item_id].verifiedBids.push(
+                Bidder(msg.sender, msg.value, public_key)
+            );
         }
 
-        itemsList[item_id].verifiedBids.push(
-            Bidder(msg.sender, msg.value, public_key)
-        );
     }
 
     function abs(uint256 a, uint256 b) private pure returns (uint256) {
@@ -194,7 +213,7 @@ contract Auction {
         }
     }
 
-    function revealBid(uint256 item_id) public payable {
+    function revealBid(uint256 item_id) public payable onlyItemSeller(item_id){
         require(
             item_id <= itemsCount && item_id > 0,
             "Item not present in list"
@@ -212,7 +231,6 @@ contract Auction {
         for (uint256 i = 0; i < itemsList[item_id].verifiedBids.length; i++) {
             uint256 currentBidPrice = itemsList[item_id].verifiedBids[i].price;
             totalBid += currentBidPrice;
-
             if (currentBidPrice > maxBid) {
                 secondMaxBid = maxBid;
                 maxBid = currentBidPrice;
@@ -230,7 +248,7 @@ contract Auction {
         ) {
             itemsList[item_id].bidWinner = maxBidder;
             itemsList[item_id].final_price = secondMaxBid;
-        } else {
+        } else if(itemsList[item_id].auctionType == AUCTION_TYPE.AVG_PRICE) {
             uint256 minDiff = 0;
             Bidder memory avgBidder;
             uint256 n = itemsList[item_id].verifiedBids.length;
@@ -245,6 +263,8 @@ contract Auction {
                 itemsList[item_id].bidWinner = avgBidder;
                 itemsList[item_id].final_price = avgBidder.price;
             }
+        } else{
+            // normal purchase, do nothing
         }
 
         itemsList[item_id].status = ITEM_STATUS.BUYING;
@@ -441,29 +461,89 @@ contract Auction {
      *
      */
     function viewActiveListings() public view returns (string memory) {
-        string memory str = "";
+        string memory str = "[";
         for (uint256 i = 1; i <= itemsCount; i++) {
-            if (itemsList[i].status == ITEM_STATUS.OPEN) {
-                str = string(abi.encodePacked(str, "Item-ID: "));
+            if (itemsList[i].auctionStatus == AUCTION_STATUS.ONGOING || (itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION && itemsList[i].auctionType == AUCTION_TYPE.FIXED)) {
+                uint at = 0;
+                if(itemsList[i].auctionType == AUCTION_TYPE.SECOND_PRICE){
+                    at=1;
+                }
+                else if(itemsList[i].auctionType == AUCTION_TYPE.AVG_PRICE){
+                    at = 2;
+                }
+                else if(itemsList[i].auctionType == AUCTION_TYPE.FIXED){
+                    at = 3;
+                }
+                uint ast = 0;
+                if(itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION){
+                    ast = 1;
+                }
+                else if(itemsList[i].auctionStatus == AUCTION_STATUS.REVEALED)
+                {
+                    ast = 2;
+                }
+                str = string(abi.encodePacked(str, "{'item-id':"));
                 str = string(abi.encodePacked(str, uintToStr(i)));
-                str = string(abi.encodePacked(str, ", Item Name: "));
+                str = string(abi.encodePacked(str, ",'item-name':'"));
                 str = string(abi.encodePacked(str, itemsList[i].item_name));
-                str = string(abi.encodePacked(str, ", Item Desc: "));
+                str = string(abi.encodePacked(str, "','item-description': '"));
                 str = string(abi.encodePacked(str, itemsList[i].item_desc));
-                str = string(abi.encodePacked(str, ", Asking Price: "));
-                str = string(
-                    abi.encodePacked(str, uintToStr(itemsList[i].asking_price))
-                );
-                str = string(abi.encodePacked(str, ", Seller Id: "));
-                str = string(
-                    abi.encodePacked(
-                        str,
-                        toString(abi.encodePacked(itemsList[i].seller))
-                    )
-                );
-                str = string(abi.encodePacked(str, "\n"));
+                str = string(abi.encodePacked(str, "','asking-price':"));
+                str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
+                str = string(abi.encodePacked(str, ",'auction-type':"));
+                str = string(abi.encodePacked(str, uintToStr(at)));
+                str = string(abi.encodePacked(str, ",'auction-status':"));
+                str = string(abi.encodePacked(str, uintToStr(ast)));
+                str = string(abi.encodePacked(str, ",'seller-id': '"));
+                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
+                str = string(abi.encodePacked(str, "'},"));
             }
         }
+        str = string(abi.encodePacked(str, "]"));
         return str;
     }
+
+    function viewSellerListings(address seller_id) public view returns (string memory) {
+        string memory str = "[";
+        for (uint256 i = 1; i <= itemsCount; i++) {
+            if (itemsList[i].seller == seller_id) {
+                uint at = 0;
+                if(itemsList[i].auctionType == AUCTION_TYPE.SECOND_PRICE){
+                    at=1;
+                }
+                else if(itemsList[i].auctionType == AUCTION_TYPE.AVG_PRICE){
+                    at = 2;
+                }
+                else if(itemsList[i].auctionType == AUCTION_TYPE.FIXED){
+                    at = 3;
+                }
+                uint ast = 0;
+                if(itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION){
+                    ast = 1;
+                }
+                else if(itemsList[i].auctionStatus == AUCTION_STATUS.REVEALED)
+                {
+                    ast = 2;
+                }
+                
+                str = string(abi.encodePacked(str, "{'item-id':"));
+                str = string(abi.encodePacked(str, uintToStr(i)));
+                str = string(abi.encodePacked(str, ",'item-name':'"));
+                str = string(abi.encodePacked(str, itemsList[i].item_name));
+                str = string(abi.encodePacked(str, "','item-description': '"));
+                str = string(abi.encodePacked(str, itemsList[i].item_desc));
+                str = string(abi.encodePacked(str, "','asking-price':"));
+                str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
+                str = string(abi.encodePacked(str, ",'auction-type':"));
+                str = string(abi.encodePacked(str, uintToStr(at)));
+                str = string(abi.encodePacked(str, ",'auction-status':"));
+                str = string(abi.encodePacked(str, uintToStr(ast)));
+                str = string(abi.encodePacked(str, ",'seller-id': '"));
+                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
+                str = string(abi.encodePacked(str, "'},"));
+            }
+        }
+        str = string(abi.encodePacked(str, "]"));
+        return str;
+    }    
 }
