@@ -1,6 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Card, Avatar, Row, Col, Tag, Modal, InputNumber, message } from "antd";
+import React, { useState, useEffect, useContext } from "react";
+import {
+  Card,
+  Avatar,
+  Row,
+  Col,
+  Tag,
+  Modal,
+  InputNumber,
+  message,
+  Spin,
+} from "antd";
 
+import { BlockchainContext } from "../App";
 import { sampleImages } from "../components/SampleImages";
 import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 
@@ -40,53 +51,24 @@ const ItemCard = ({ item, setModal }) => {
 };
 
 const Marketplace = (props) => {
-  const [items, setItems] = useState([
-    {
-      name: "Abc Def",
-      auctionType: "Abc",
-      seller: "ASas",
-    },
-    {
-      name: "Abc Def",
-      auctionType: "Abc",
-      seller: "ASas",
-    },
-    {
-      name: "Abc Def",
-      auctionType: "Abc",
-      seller: "ASas",
-    },
-    {
-      name: "Abc Def",
-      auctionType: "Abc",
-      seller: "ASas",
-    },
-    {
-      name: "Abc Def",
-      auctionType: "Abc",
-      seller: "ASas",
-    },
-    {
-      name: "Abc Def",
-      auctionType: "Abc",
-      seller: "ASas",
-    },
-    {
-      name: "Abc Def",
-      auctionType: "Abc",
-      seller: "ASas",
-    },
-    {
-      name: "Abc Def",
-      auctionType: "Abc",
-      seller: "ASas",
-    },
-    {
-      name: "Abc Def",
-      auctionType: "Abc",
-      seller: "ASas",
-    },
-  ]);
+  const [items, setItems] = useState([]);
+
+  const { userAccount, contract } = useContext(BlockchainContext);
+  const [loading, setLoading] = useState(true);
+
+  const fetchListings = () => {
+    contract.methods
+      .viewActiveListings()
+      .call()
+      .then((data) => JSON.parse(data))
+      .then((data) => {
+        setItems(data);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => fetchListings(), []);
+
   const [modal, setModal] = useState({ visible: false, itemId: "" });
   const [bid, setBid] = useState();
 
@@ -94,12 +76,25 @@ const Marketplace = (props) => {
     "No items found"
   ) : (
     <>
-      <Row align="center" gutter={[26, 26]}>
-        {items.map((item, key) => {
-          return <ItemCard item={item} setModal={setModal} />;
-        })}
-      </Row>
-
+      {loading && (
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Spin />
+        </div>
+      )}
+      {!loading && (
+        <Row align="center" gutter={[26, 26]}>
+          {items.map((item, key) => {
+            return <ItemCard item={item} setModal={setModal} />;
+          })}
+        </Row>
+      )}
       <Modal
         title="Painting By Picasso, 1756"
         centered
