@@ -42,7 +42,7 @@ const ItemCard = ({
           });
       }}
     >
-      Stop Bids
+      Stop Bidding
     </div>,
   ];
 

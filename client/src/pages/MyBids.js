@@ -25,8 +25,9 @@ const { Meta } = Card;
 
 const ItemCard = ({ item, setModal, generateIdentity }) => {
   let actions = [];
-  console.log(item);
-  if (item.auctionType == 3) {
+  if (item.auctionStatus == 0) {
+    actions = [<div>Bidding is active</div>];
+  } else if (item.auctionStatus == 1) {
     actions = [
       <div
         onClick={() => {
@@ -34,19 +35,11 @@ const ItemCard = ({ item, setModal, generateIdentity }) => {
           setModal({ visible: true, ...item });
         }}
       >
-        Buy
+        Verify Bid
       </div>,
     ];
-  } else {
-    if (item.alreadyBid == "0x01") {
-      actions = [<div>Bid Placed</div>];
-    } else {
-      actions = [
-        <div onClick={() => setModal({ visible: true, ...item })}>
-          Place Bid
-        </div>,
-      ];
-    }
+  } else if (item.auctionStatus == 2) {
+    actions = [<div>Sold</div>];
   }
   return (
     <Col>
@@ -106,7 +99,7 @@ const ItemCard = ({ item, setModal, generateIdentity }) => {
   );
 };
 
-const Marketplace = ({ fetchBalance }) => {
+const MyBids = ({ fetchBalance }) => {
   const [items, setItems] = useState([]);
 
   const { userAccount, contract } = useContext(BlockchainContext);
@@ -118,7 +111,8 @@ const Marketplace = ({ fetchBalance }) => {
       .call()
       .then((data) => JSON.parse(data))
       .then((data) => {
-        setItems(data);
+        console.log(data);
+        setItems(data.filter((item) => item.alreadyBid == "0x01"));
         setLoading(false);
       })
       .catch((err) => console.log(err));
@@ -306,7 +300,7 @@ const Marketplace = ({ fetchBalance }) => {
               onChange={(value) => setInput({ ...input, bid: value })}
             />
             <Input
-              placeholder="Enter a secret code to verify bid later on"
+              placeholder="Enter the secret code"
               value={input.confirmKey}
               onChange={(_, value) => setInput({ ...input, confirmKey: value })}
             />
@@ -317,4 +311,4 @@ const Marketplace = ({ fetchBalance }) => {
   );
 };
 
-export default Marketplace;
+export default MyBids;

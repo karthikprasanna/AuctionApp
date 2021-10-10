@@ -6,7 +6,8 @@ import { BlockchainContext } from "../App";
 import Navbar from "../components/Navbar";
 import Marketplace from "./Marketplace";
 import Portal from "./Portal";
-import Cart from "./Cart";
+import MyBids from "./MyBids";
+import Orders from "./Orders";
 import NotFound from "./NotFound";
 
 const { Content, Footer } = Layout;
@@ -43,13 +44,16 @@ const Routes = (props) => {
         >
           <Switch>
             <Route exact path="/">
-              <Marketplace />
+              <Marketplace fetchBalance={fetchBalance} />
             </Route>
             <Route exact path="/portal">
               <Portal fetchBalance={fetchBalance} />
             </Route>
-            <Route exact path="/cart">
-              <Cart />
+            <Route exact path="/mybids">
+              <MyBids />
+            </Route>
+            <Route exact path="/orders">
+              <Orders />
             </Route>
             <Route>
               <NotFound />

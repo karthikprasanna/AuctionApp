@@ -12,18 +12,6 @@ const parseBalance = (num, decimal) =>
 
 const Navbar = ({ balance }) => {
   const [currentPage, setCurrentPage] = useState(useLocation().pathname);
-  // const { web3, userAccount } = useContext(BlockchainContext);
-  // const [balance, setBalance] = useState(0);
-
-  // export const fetchBalance = () => {
-  //   web3.eth
-  //     .getBalance(userAccount)
-  //     .then((currentBalance) => setBalance(currentBalance));
-  // };
-
-  // useEffect(() => {
-  //   fetchBalance();
-  // }, []);
 
   return (
     <Header
@@ -50,8 +38,11 @@ const Navbar = ({ balance }) => {
             <Menu.Item key="/portal">
               <Link to="/portal">Seller Portal</Link>
             </Menu.Item>
-            <Menu.Item key="/cart">
-              <Link to="/cart">My Cart</Link>
+            <Menu.Item key="/mybids">
+              <Link to="/mybids">My Bids</Link>
+            </Menu.Item>
+            <Menu.Item key="/orders">
+              <Link to="/orders">Orders</Link>
             </Menu.Item>
           </Menu>
         </Col>
