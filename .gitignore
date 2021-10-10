@@ -7,7 +7,7 @@
 .vscode
 
 # contract build files
-**/contracts/Auction.json
+**/contracts/*.json
 
 # misc
 .DS_Store
