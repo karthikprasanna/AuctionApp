@@ -82,8 +82,20 @@ const Portal = ({ fetchBalance }) => {
         </div>
       )}
       {!loading && page == 0 && <AllItems items={items} />}
-      {!loading && page == 1 && <ActiveBids items={items} />}
-      {!loading && page == 2 && <RevealBids items={items} />}
+      {!loading && page == 1 && (
+        <ActiveBids
+          items={items}
+          fetchListings={fetchListings}
+          fetchBalance={fetchBalance}
+        />
+      )}
+      {!loading && page == 2 && (
+        <RevealBids
+          items={items}
+          fetchListings={fetchListings}
+          fetchBalance={fetchBalance}
+        />
+      )}
 
       <Modal
         title="Add a new item"

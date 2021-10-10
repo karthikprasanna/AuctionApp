@@ -12,22 +12,40 @@ import {
   Select,
 } from "antd";
 
+import { BlockchainContext } from "../../App";
 import { sampleImages } from "../../components/SampleImages";
 
 const { Meta } = Card;
-const { TextArea } = Input;
-const { Option } = Select;
 
-const ItemCard = ({ item, setModal, isPortal }) => {
-  let actions = [];
-  if (isPortal) {
-  } else {
-    actions = [
-      <div onClick={() => setModal({ visible: true, itemId: "" })}>
-        Place Bid
-      </div>,
-    ];
-  }
+const ItemCard = ({
+  item,
+  setModal,
+  isPortal,
+  fetchListings,
+  fetchBalance,
+}) => {
+  const { userAccount, contract } = useContext(BlockchainContext);
+  let actions = [
+    <div
+      onClick={() => {
+        contract.methods
+          .closeBid(item.itemId)
+          .send({ from: userAccount, gas: 3000000 })
+          .then((item) => {
+            fetchListings();
+            message.success("Bid closed", 2.5);
+            fetchBalance();
+          })
+          .catch((err) => {
+            message.error(err.message, 3);
+            fetchBalance();
+          });
+      }}
+    >
+      Stop Bids
+    </div>,
+  ];
+
   return (
     <Col>
       <Card
@@ -86,18 +104,29 @@ const ItemCard = ({ item, setModal, isPortal }) => {
   );
 };
 
-const ActiveBids = ({ items }) => {
-  return items.length == 0 ? (
-    <div style={{ margin: "2rem 0" }}>You haven't added any item yet</div>
+const ActiveBids = ({ items, fetchListings, fetchBalance }) => {
+  const [activeItems, setActiveItems] = useState([]);
+  useEffect(() => {
+    setActiveItems(
+      items.filter((item) => item.auctionType != 3 && item.auctionStatus == 0)
+    );
+  }, [items]);
+  return activeItems.length == 0 ? (
+    <div style={{ margin: "2rem 0" }}>No items found</div>
   ) : (
     <Row
       style={{ width: "100%", marginTop: "3rem" }}
       align="center"
       gutter={[26, 26]}
     >
-      {items.map((item, key) => {
+      {activeItems.map((item, key) => {
         return (
-          <ItemCard item={item} key={key} isPortal={true} setModal={() => {}} />
+          <ItemCard
+            item={item}
+            key={key}
+            fetchListings={fetchListings}
+            fetchBalance={fetchBalance}
+          />
         );
       })}
     </Row>
