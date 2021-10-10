@@ -48,6 +48,7 @@ contract Auction {
         uint256 asking_price;
         uint256 final_price;
         mapping(bytes32 => bool) hashedBids;
+        uint biddersCount;
         mapping(address => bool) bidders;
         Bidder[] verifiedBids;
         Bidder bidWinner;
@@ -162,7 +163,12 @@ contract Auction {
             itemsList[item_id].auctionStatus == AUCTION_STATUS.ONGOING,
             "Auction not ongoing"
         );
+        require(
+            itemsList[item_id].bidders[msg.sender] == false,
+            "Already bidder"
+        );
         itemsList[item_id].hashedBids[hashString] = true;
+        itemsList[item_id].biddersCount+=1;
         itemsList[item_id].bidders[msg.sender] = true;
     }
 
@@ -178,6 +184,10 @@ contract Auction {
         require(
             itemsList[item_id].auctionStatus == AUCTION_STATUS.ONGOING,
             "Auction not ongoing"
+        );
+        require(
+            itemsList[item_id].biddersCount != 0,
+            "No Bidder"
         );
         itemsList[item_id].auctionStatus = AUCTION_STATUS.VERIFICATION;
     }
