@@ -48,6 +48,7 @@ contract Auction {
         uint256 asking_price;
         uint256 final_price;
         mapping(bytes32 => bool) hashedBids;
+        uint256 biddersCount;
         mapping(address => bool) bidders;
         Bidder[] verifiedBids;
         Bidder bidWinner;
@@ -172,7 +173,12 @@ contract Auction {
             itemsList[item_id].auctionStatus == AUCTION_STATUS.ONGOING,
             "Auction not ongoing"
         );
+        require(
+            itemsList[item_id].bidders[msg.sender] == false,
+            "Already bidded"
+        );
         itemsList[item_id].hashedBids[hashString] = true;
+        itemsList[item_id].biddersCount += 1;
         itemsList[item_id].bidders[msg.sender] = true;
     }
 
@@ -188,6 +194,10 @@ contract Auction {
         require(
             itemsList[item_id].auctionStatus == AUCTION_STATUS.ONGOING,
             "Auction not ongoing"
+        );
+        require(
+            itemsList[item_id].biddersCount != 0,
+            "No Bidder"
         );
         itemsList[item_id].auctionStatus = AUCTION_STATUS.VERIFICATION;
     }
@@ -534,7 +544,7 @@ contract Auction {
                 str = string(abi.encodePacked(str, uintToStr(at)));
                 str = string(abi.encodePacked(str, ',"auctionStatus":'));
                 str = string(abi.encodePacked(str, uintToStr(ast)));
-                str = string(abi.encodePacked(str, ',"sellerId": "'));
+                str = string(abi.encodePacked(str, ',"sellerId": '));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
                 str = string(abi.encodePacked(str, ',"alreadyBid": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidders[msg.sender]))));
