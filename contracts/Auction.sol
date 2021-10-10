@@ -258,6 +258,10 @@ contract Auction {
             itemsList[item_id].auctionStatus == AUCTION_STATUS.VERIFICATION,
             "Bid verification not in progress"
         );
+        require(
+            itemsList[item_id].verifiedBids.length > 0,
+            "No one verified bid"
+        );
 
         uint256 maxBid = 0;
         Bidder memory maxBidder;
