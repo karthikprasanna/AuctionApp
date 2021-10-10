@@ -54246,12 +54246,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0x3Bd847948b3272B2A870D2E7Ba84b12f8BbF18d7",
-      "transactionHash": "0xbc11895fa9b6d75701720a75d8e2a1c4e8a40c4e77b4d99d791a81ab10a8ea53"
+      "address": "0xd2Fa0cD65d5a0E9E16526F6f0B3850e1C723C6C0",
+      "transactionHash": "0x7c47b20240291582cfa4c273e9807a10ceda397829082e740641c87260fe1eca"
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-10-10T06:07:10.547Z",
+  "updatedAt": "2021-10-10T08:00:52.776Z",
   "networkType": "ethereum",
   "devdoc": {
     "author": "Team Block-Daggers ",
