@@ -10,16 +10,20 @@ const { Header } = Layout;
 const parseBalance = (num, decimal) =>
   Math.round(10 ** decimal * (num / 10 ** 18)) / 10 ** decimal;
 
-const Navbar = (props) => {
+const Navbar = ({ balance }) => {
   const [currentPage, setCurrentPage] = useState(useLocation().pathname);
-  const { web3, userAccount } = useContext(BlockchainContext);
-  const [balance, setBalance] = useState(0);
+  // const { web3, userAccount } = useContext(BlockchainContext);
+  // const [balance, setBalance] = useState(0);
 
-  useEffect(() => {
-    web3.eth
-      .getBalance(userAccount)
-      .then((currentBalance) => setBalance(currentBalance));
-  }, []);
+  // export const fetchBalance = () => {
+  //   web3.eth
+  //     .getBalance(userAccount)
+  //     .then((currentBalance) => setBalance(currentBalance));
+  // };
+
+  // useEffect(() => {
+  //   fetchBalance();
+  // }, []);
 
   return (
     <Header
@@ -63,7 +67,7 @@ const Navbar = (props) => {
             }}
           >
             <EthereumIcon style={{ height: "1rem", marginRight: "5px" }} />
-            {parseBalance(balance, 4)}
+            {balance}
           </div>
         </Col>
       </Row>

@@ -104,6 +104,16 @@ contract Auction {
     }
 
     /**
+     * Checks empty string
+     * 
+     * @param str string
+     */
+    modifier nonEmpty(string memory str){
+        require(bytes(str).length>0, "String should be non empty");
+        _;
+    }
+
+    /**
      * Adds an item in the marketplace
      * Used by: Seller
      *
@@ -116,7 +126,11 @@ contract Auction {
         string memory _item_desc,
         uint256 _asking_price,
         uint256 _auction_type
-    ) public returns (uint256) {
+    ) 
+    public 
+    nonEmpty(_item_name)
+    nonEmpty(_item_desc)
+    returns (uint256) {
         itemsCount++;
         itemsList[itemsCount].status = ITEM_STATUS.LOCKED;
         itemsList[itemsCount].item_desc = _item_desc;

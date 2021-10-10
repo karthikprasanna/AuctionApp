@@ -2,104 +2,40 @@ import React, { useState, useEffect, useContext } from "react";
 import {
   Row,
   Col,
-  Card,
-  Tag,
   Modal,
   message,
   InputNumber,
   Input,
   Space,
   Select,
+  Spin,
 } from "antd";
 
 import { BlockchainContext } from "../App";
+import AllItems from "./portal/AllItems";
+import ActiveBids from "./portal/ActiveBids";
+import RevealBids from "./portal/RevealBids";
 import Chip from "../components/Chip";
-import { sampleImages } from "../components/SampleImages";
 import placeholderImg from "../assets/placeholderImage.jpg";
 
-const { Meta } = Card;
 const { TextArea } = Input;
 const { Option } = Select;
 
-const ItemCard = ({ item, setModal, isPortal }) => {
-  let actions = [];
-  if (isPortal) {
-  } else {
-    actions = [
-      <div onClick={() => setModal({ visible: true, itemId: "" })}>
-        Place Bid
-      </div>,
-    ];
-  }
-  return (
-    <Col>
-      <Card
-        style={{ width: 300, margin: "20px 0" }}
-        cover={
-          <img
-            style={{ width: "100%", maxHeight: "200px", objectFit: "cover" }}
-            src={sampleImages[(item.itemId - 1) % 9]}
-          />
-        }
-        actions={actions}
-      >
-        <Meta title={item.itemName} description={item.itemDescription} />
-        {item.auctionType == 0 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="blue"
-          >
-            First Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 1 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="volcano"
-          >
-            Second Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 2 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="magenta"
-          >
-            Average Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 3 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="green"
-          >
-            Price: {item.askingPrice} Wei
-          </Tag>
-        )}
-      </Card>
-    </Col>
-  );
-};
-
-const Portal = (props) => {
+const Portal = ({ fetchBalance }) => {
   const [items, setItems] = useState([]);
 
   const { userAccount, contract } = useContext(BlockchainContext);
+  const [loading, setLoading] = useState(true);
 
   const fetchListings = () => {
     contract.methods
       .viewSellerListings(userAccount)
       .call()
       .then((data) => JSON.parse(data))
-      .then((data) => setItems(data));
+      .then((data) => {
+        setItems(data);
+        setLoading(false);
+      });
   };
 
   useEffect(() => fetchListings(), []);
@@ -112,6 +48,8 @@ const Portal = (props) => {
     bidType: 3,
   });
 
+  const [page, setPage] = useState(0);
+
   return (
     <>
       <Row style={{ width: "100%" }} gutter={[26, 26]}>
@@ -121,34 +59,31 @@ const Portal = (props) => {
             onClick={() => setModal({ ...modal, visible: true })}
           />
         </Col>
-        <Col flex="1">
-          <Chip text={"View Active Bids"} />
+        <Col flex="1" onClick={() => setPage(page != 1 ? 1 : 0)}>
+          <Chip text={page != 1 ? "View Active Bids" : "View All Items"} />
         </Col>
-        <Col flex="1">
-          <Chip text={"Reveal Bids / Deliver Items"} />
+        <Col flex="1" onClick={() => setPage(page != 2 ? 2 : 0)}>
+          <Chip
+            text={page != 2 ? "Reveal Bids / Deliver Items" : "View All Items"}
+          />
         </Col>
       </Row>
 
-      {items.length == 0 ? (
-        <div style={{ margin: "2rem 0" }}>You haven't added any item yet</div>
-      ) : (
-        <Row
-          style={{ width: "100%", marginTop: "3rem" }}
-          align="center"
-          gutter={[26, 26]}
+      {loading && (
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         >
-          {items.map((item, key) => {
-            return (
-              <ItemCard
-                item={item}
-                key={key}
-                isPortal={true}
-                setModal={() => {}}
-              />
-            );
-          })}
-        </Row>
+          <Spin />
+        </div>
       )}
+      {!loading && page == 0 && <AllItems items={items} />}
+      {!loading && page == 1 && <ActiveBids items={items} />}
+      {!loading && page == 2 && <RevealBids items={items} />}
 
       <Modal
         title="Add a new item"
@@ -166,9 +101,13 @@ const Portal = (props) => {
             .send({ from: userAccount, gas: 3000000 })
             .then((item) => {
               fetchListings();
-              message.success("Item Added Successfully, ", 2.5);
+              message.success("Item Added Successfully", 2.5);
+              fetchBalance();
             })
-            .catch((err) => message.error(err, 2.5));
+            .catch((err) => {
+              message.error(err.message, 3);
+              fetchBalance();
+            });
 
           setModal({
             visible: false,
