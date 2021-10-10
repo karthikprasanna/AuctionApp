@@ -1,5 +1,5 @@
-const Auction = artifacts.require("Auction.sol");
+const Auction = artifacts.require("./Auction.sol");
 
-module.exports = async function(deployer) {
-    await deployer.deploy(Auction);
+module.exports = function (deployer) {
+  deployer.deploy(Auction);
 };
