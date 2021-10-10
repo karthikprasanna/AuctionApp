@@ -48,6 +48,7 @@ contract Auction {
         uint256 asking_price;
         uint256 final_price;
         mapping(bytes32 => bool) hashedBids;
+        mapping(address => bool) bidders;
         Bidder[] verifiedBids;
         Bidder bidWinner;
         AUCTION_STATUS auctionStatus;
@@ -162,6 +163,7 @@ contract Auction {
             "Auction not ongoing"
         );
         itemsList[item_id].hashedBids[hashString] = true;
+        itemsList[item_id].bidders[msg.sender] = true;
     }
 
     function closeBid(uint256 item_id) public {
@@ -511,6 +513,8 @@ contract Auction {
                 str = string(abi.encodePacked(str, uintToStr(ast)));
                 str = string(abi.encodePacked(str, ',"sellerId": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
+                str = string(abi.encodePacked(str, ',"alreadyBid": "'));
+                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidders[msg.sender]))));
                 if(i != itemsCount)
                 {
                     str = string(abi.encodePacked(str, '"},'));
