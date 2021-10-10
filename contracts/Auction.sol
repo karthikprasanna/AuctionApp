@@ -111,7 +111,17 @@ contract Auction {
      * @param str string
      */
     modifier nonEmpty(string memory str){
-        require(bytes(str).length>0, "String should be non empty");
+        require(bytes(str).length > 0, "String should be non empty");
+        _;
+    }
+
+    /**
+     * Checks empty array
+     * 
+     * @param item_id id of the item
+     */
+    modifier nonEmptyBidders(uint256 item_id){
+        require(true, "No bidders found");
         _;
     }
 
@@ -172,7 +182,7 @@ contract Auction {
         itemsList[item_id].bidders[msg.sender] = true;
     }
 
-    function closeBid(uint256 item_id) public {
+    function closeBid(uint256 item_id) public nonEmptyBidders(item_id) {
         require(
             msg.sender == itemsList[item_id].seller || msg.sender == address(this),
             'Access denied'
@@ -509,13 +519,26 @@ contract Auction {
                     ast = 2;
                 }
                 
+                uint ist = 0;
+                if(itemsList[i].status == ITEM_STATUS.OPEN){
+                    ist = 1;
+                }
+                else if(itemsList[i].status == ITEM_STATUS.BUYING){
+                    ist = 2;
+                }
+                else if(itemsList[i].status == ITEM_STATUS.BOUGHT){
+                    ist = 3;
+                }
+                
                 str = string(abi.encodePacked(str, '{"itemId":'));
                 str = string(abi.encodePacked(str, uintToStr(i)));
                 str = string(abi.encodePacked(str, ',"itemName":"'));
                 str = string(abi.encodePacked(str, itemsList[i].item_name));
                 str = string(abi.encodePacked(str, '","itemDescription": "'));
                 str = string(abi.encodePacked(str, itemsList[i].item_desc));
-                str = string(abi.encodePacked(str, '","askingPrice":'));
+                str = string(abi.encodePacked(str, '","itemStatus":'));
+                str = string(abi.encodePacked(str, uintToStr(ist)));
+                str = string(abi.encodePacked(str, ',"askingPrice":'));
                 str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
                 str = string(abi.encodePacked(str, ',"auctionType":'));
                 str = string(abi.encodePacked(str, uintToStr(at)));
@@ -561,6 +584,16 @@ contract Auction {
                 {
                     ast = 2;
                 }
+                uint ist = 0;
+                if(itemsList[i].status == ITEM_STATUS.OPEN){
+                    ist = 1;
+                }
+                else if(itemsList[i].status == ITEM_STATUS.BUYING){
+                    ist = 2;
+                }
+                else if(itemsList[i].status == ITEM_STATUS.BOUGHT){
+                    ist = 3;
+                }
                 
                 str = string(abi.encodePacked(str, '{"itemId":'));
                 str = string(abi.encodePacked(str, uintToStr(i)));
@@ -568,7 +601,9 @@ contract Auction {
                 str = string(abi.encodePacked(str, itemsList[i].item_name));
                 str = string(abi.encodePacked(str, '","itemDescription": "'));
                 str = string(abi.encodePacked(str, itemsList[i].item_desc));
-                str = string(abi.encodePacked(str, '","askingPrice":'));
+                str = string(abi.encodePacked(str, '","itemStatus":'));
+                str = string(abi.encodePacked(str, uintToStr(ist)));
+                str = string(abi.encodePacked(str, ',"askingPrice":'));
                 str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
                 str = string(abi.encodePacked(str, ',"auctionType":'));
                 str = string(abi.encodePacked(str, uintToStr(at)));
