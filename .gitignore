@@ -3,7 +3,8 @@
 # dependencies
 */node_modules
 
-# production
+# vscode
+.vscode
 
 # contract build files
 */contracts/*.json
