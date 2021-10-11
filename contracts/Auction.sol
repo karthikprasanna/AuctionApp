@@ -220,7 +220,7 @@ contract Auction {
                 itemsList[item_id].final_price = msg.value;
                 itemsList[item_id].bidWinner = Bidder(msg.sender, msg.value, public_key); 
                 itemsList[item_id].status = ITEM_STATUS.BUYING;
-                itemsList[itemsCount].auctionStatus = AUCTION_STATUS.REVEALED;   // everything is done 
+                itemsList[item_id].auctionStatus = AUCTION_STATUS.REVEALED;   // everything is done 
             }
             else{
                 revert("Invalid Price");
@@ -308,7 +308,7 @@ contract Auction {
         }
 
         itemsList[item_id].status = ITEM_STATUS.BUYING;
-        itemsList[itemsCount].auctionStatus = AUCTION_STATUS.REVEALED;
+        itemsList[item_id].auctionStatus = AUCTION_STATUS.REVEALED;
         returnNonWinnerMoney(item_id);
     }
 
