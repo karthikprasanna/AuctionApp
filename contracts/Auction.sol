@@ -50,6 +50,7 @@ contract Auction {
         mapping(bytes32 => bool) hashedBids;
         uint256 biddersCount;
         mapping(address => bool) bidders;
+        mapping(address => bool) isVerified;
         Bidder[] verifiedBids;
         Bidder bidWinner;
         AUCTION_STATUS auctionStatus;
@@ -237,6 +238,7 @@ contract Auction {
             itemsList[item_id].verifiedBids.push(
                 Bidder(msg.sender, msg.value, public_key)
             );
+            itemsList[itemsCount].isVerified[msg.sender] = true;
         }
 
     }
@@ -554,6 +556,8 @@ contract Auction {
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidders[msg.sender]))));
                 str = string(abi.encodePacked(str, '","bidWinner": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidWinner.buyer))));
+                str = string(abi.encodePacked(str, '","isVerified": "'));
+                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].isVerified[msg.sender]))));
                 if(i != itemsCount)
                 {
                     str = string(abi.encodePacked(str, '"},'));
