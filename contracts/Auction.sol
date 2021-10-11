@@ -50,7 +50,6 @@ contract Auction {
         mapping(bytes32 => bool) hashedBids;
         uint256 biddersCount;
         mapping(address => bool) bidders;
-        mapping(address => bool) isVerified;
         Bidder[] verifiedBids;
         Bidder bidWinner;
         AUCTION_STATUS auctionStatus;
@@ -238,7 +237,6 @@ contract Auction {
             itemsList[item_id].verifiedBids.push(
                 Bidder(msg.sender, msg.value, public_key)
             );
-            itemsList[itemsCount].isVerified[msg.sender] = true;
         }
 
     }
@@ -504,6 +502,7 @@ contract Auction {
      */
     function viewActiveListings(bool allItems) public view returns (string memory) {
         string memory str = "[";
+        bool firstItem = true;
         for (uint256 i = 1; i <= itemsCount; i++) {
             if (allItems || itemsList[i].auctionStatus == AUCTION_STATUS.ONGOING || (itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION && itemsList[i].auctionType == AUCTION_TYPE.FIXED)) {
                 uint at = 0;
@@ -536,6 +535,10 @@ contract Auction {
                     ist = 3;
                 }
                 
+                if(!firstItem){
+                    str = string(abi.encodePacked(str, ','));    
+                }
+                firstItem = false;
                 str = string(abi.encodePacked(str, '{"itemId":'));
                 str = string(abi.encodePacked(str, uintToStr(i)));
                 str = string(abi.encodePacked(str, ',"itemName":"'));
@@ -556,16 +559,7 @@ contract Auction {
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidders[msg.sender]))));
                 str = string(abi.encodePacked(str, '","bidWinner": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidWinner.buyer))));
-                str = string(abi.encodePacked(str, '","isVerified": "'));
-                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].isVerified[msg.sender]))));
-                if(i != itemsCount)
-                {
-                    str = string(abi.encodePacked(str, '"},'));
-                }
-                else
-                {
-                    str = string(abi.encodePacked(str, '"}'));
-                }
+                str = string(abi.encodePacked(str, '"}'));
             }
         }
         str = string(abi.encodePacked(str, "]"));
@@ -574,6 +568,7 @@ contract Auction {
 
     function viewSellerListings(address seller_id) public view returns (string memory) {
         string memory str = "[";
+        bool firstItem = true;
         for (uint256 i = 1; i <= itemsCount; i++) {
             if (itemsList[i].seller == seller_id) {
                 uint at = 0;
@@ -604,7 +599,11 @@ contract Auction {
                 else if(itemsList[i].status == ITEM_STATUS.BOUGHT){
                     ist = 3;
                 }
-                
+
+                if(!firstItem){
+                    str = string(abi.encodePacked(str, ','));    
+                }
+                firstItem = false;
                 str = string(abi.encodePacked(str, '{"itemId":'));
                 str = string(abi.encodePacked(str, uintToStr(i)));
                 str = string(abi.encodePacked(str, ',"itemName":"'));
@@ -621,14 +620,7 @@ contract Auction {
                 str = string(abi.encodePacked(str, uintToStr(ast)));
                 str = string(abi.encodePacked(str, ',"sellerId": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
-                if(i != itemsCount)
-                {
-                    str = string(abi.encodePacked(str, '"},'));
-                }
-                else
-                {
-                    str = string(abi.encodePacked(str, '"}'));
-                }
+                str = string(abi.encodePacked(str, '"}'));
             }
         }
         str = string(abi.encodePacked(str, "]"));
