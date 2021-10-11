@@ -500,10 +500,10 @@ contract Auction {
      * Used by: public
      *
      */
-    function viewActiveListings() public view returns (string memory) {
+    function viewActiveListings(bool allItems) public view returns (string memory) {
         string memory str = "[";
         for (uint256 i = 1; i <= itemsCount; i++) {
-            if (itemsList[i].auctionStatus == AUCTION_STATUS.ONGOING || (itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION && itemsList[i].auctionType == AUCTION_TYPE.FIXED)) {
+            if (allItems || itemsList[i].auctionStatus == AUCTION_STATUS.ONGOING || (itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION && itemsList[i].auctionType == AUCTION_TYPE.FIXED)) {
                 uint at = 0;
                 if(itemsList[i].auctionType == AUCTION_TYPE.SECOND_PRICE){
                     at=1;
@@ -552,6 +552,8 @@ contract Auction {
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
                 str = string(abi.encodePacked(str, ',"alreadyBid": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidders[msg.sender]))));
+                str = string(abi.encodePacked(str, ',"bidWinner": "'));
+                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidWinner.buyer))));
                 if(i != itemsCount)
                 {
                     str = string(abi.encodePacked(str, '"},'));
