@@ -15,6 +15,7 @@ import EthCrypto from "eth-crypto";
 
 import { BlockchainContext } from "../../App";
 import { sampleImages } from "../../components/SampleImages";
+import ItemDetailsCard from "../../components/ItemDetailsCard";
 
 const { Meta } = Card;
 
@@ -30,20 +31,12 @@ const ItemCard = ({
   if (item.auctionType == 3 && item.itemStatus == 2) {
     actions = [
       <div
-        onClick={() => {
-          contract.methods
-            .closeBid(item.itemId)
-            .send({ from: userAccount, gas: 3000000 })
-            .then((item) => {
-              fetchListings();
-              message.success("Item delivered successfully", 2.5);
-              fetchBalance();
-            })
-            .catch((err) => {
-              message.error(err.message, 3);
-              fetchBalance();
-            });
-        }}
+        onClick={() =>
+          setModal({
+            visible: true,
+            ...item,
+          })
+        }
       >
         Deliver Item
       </div>,
@@ -65,58 +58,7 @@ const ItemCard = ({
 
   return (
     <Col>
-      <Card
-        style={{ width: 300, margin: "20px 0" }}
-        cover={
-          <img
-            style={{ width: "100%", maxHeight: "200px", objectFit: "cover" }}
-            src={sampleImages[(item.itemId - 1) % 9]}
-          />
-        }
-        actions={actions}
-      >
-        <Meta title={item.itemName} description={item.itemDescription} />
-        {item.auctionType == 0 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="blue"
-          >
-            First Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 1 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="volcano"
-          >
-            Second Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 2 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="magenta"
-          >
-            Average Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 3 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="green"
-          >
-            Price: {item.askingPrice} Wei
-          </Tag>
-        )}
-      </Card>
+      <ItemDetailsCard item={item} actions={actions} />
     </Col>
   );
 };
@@ -144,20 +86,21 @@ const RevealBids = ({ items, fetchListings, fetchBalance }) => {
       .call()
       .then((buyerKey) => {
         EthCrypto.encryptWithPublicKey(buyerKey, modal.secretKey)
-          .then((encryptedPassword) =>
+          .then((encryptedPassword) => JSON.stringify(encryptedPassword))
+          .then((encryptedPassword) => {
             contract.methods
-              .giveAccess(modal.itemId)
+              .giveAccess(modal.itemId, encryptedPassword)
               .send({ from: userAccount, gas: 3000000 })
               .then((item) => {
                 fetchListings();
-                message.success("Item Delivered Successfully", 2.5);
+                message.success("Item Delivered Successfully", 1);
                 fetchBalance();
               })
               .catch((err) => {
                 message.error(err.message, 3);
                 fetchBalance();
-              })
-          )
+              });
+          })
           .catch((err) => {
             message.error(err.message, 3);
             fetchBalance();
@@ -198,10 +141,10 @@ const RevealBids = ({ items, fetchListings, fetchBalance }) => {
         visible={modal.visible}
         onOk={() => {
           if (modal.auctionType == 3) {
-            message.loading("Delivering Item ..", 1);
+            message.loading("Delivering Item ..", 0.6);
             deliverItem();
           } else {
-            message.loading("Revealing Bid and Delivering Item ..", 1);
+            message.loading("Revealing Bid and Delivering Item ..", 0.6);
             contract.methods
               .revealBid(modal.itemId)
               .send({ from: userAccount, gas: 3000000 })

@@ -20,8 +20,7 @@ import { CopyOutlined } from "@ant-design/icons";
 import { BlockchainContext } from "../App";
 import { sampleImages } from "../components/SampleImages";
 import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
-
-const { Meta } = Card;
+import ItemDetailsCard from "../components/ItemDetailsCard";
 
 const ItemCard = ({ item, setModal, generateIdentity }) => {
   let actions = [];
@@ -50,58 +49,7 @@ const ItemCard = ({ item, setModal, generateIdentity }) => {
   }
   return (
     <Col>
-      <Card
-        style={{ width: 300, margin: "20px 0" }}
-        cover={
-          <img
-            style={{ width: "100%" }}
-            src={sampleImages[(item.itemId - 1) % 9]}
-          />
-        }
-        actions={actions}
-      >
-        <Meta title={item.itemName} description={item.itemDescription} />
-        {item.auctionType == 0 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="blue"
-          >
-            First Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 1 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="volcano"
-          >
-            Second Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 2 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="magenta"
-          >
-            Average Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 3 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="green"
-          >
-            Price: {item.askingPrice} Wei
-          </Tag>
-        )}
-      </Card>
+      <ItemDetailsCard item={item} actions={actions} />
     </Col>
   );
 };
@@ -114,7 +62,7 @@ const Marketplace = ({ fetchBalance }) => {
 
   const fetchListings = () => {
     contract.methods
-      .viewActiveListings()
+      .viewActiveListings(false)
       .call()
       .then((data) => JSON.parse(data))
       .then((data) => {
@@ -174,7 +122,6 @@ const Marketplace = ({ fetchBalance }) => {
           centered
           visible={modal.visible}
           onOk={() => {
-            message.loading("Buying Item ..", 1);
             contract.methods
               .verifyBid(modal.itemId, "", input.publicKey)
               .send({
@@ -184,7 +131,7 @@ const Marketplace = ({ fetchBalance }) => {
               })
               .then((item) => {
                 fetchListings();
-                message.success("Item Bought", 2.5);
+                message.success("Item Bought", 1);
                 fetchBalance();
               })
               .catch((err) => {
@@ -220,7 +167,7 @@ const Marketplace = ({ fetchBalance }) => {
               src={sampleImages[(modal.itemId - 1) % 9]}
             />
             <Input
-              placeholder="Secret key"
+              placeholder="Secret Delivery key"
               value={input.privateKey}
               suffix={
                 <Tooltip title="Click to copy">
@@ -248,7 +195,7 @@ const Marketplace = ({ fetchBalance }) => {
           centered
           visible={modal.visible}
           onOk={() => {
-            message.loading("Placing the bid..", 1);
+            message.loading("Placing the bid..", 0.6);
             const hashedString = keccak256(
               userAccount + input.confirmKey + input.bid
             );
@@ -260,7 +207,7 @@ const Marketplace = ({ fetchBalance }) => {
               })
               .then((item) => {
                 fetchListings();
-                message.success("Bid placed successfully", 2.5);
+                message.success("Bid placed successfully", 1);
                 fetchBalance();
               })
               .catch((err) => {
@@ -308,7 +255,9 @@ const Marketplace = ({ fetchBalance }) => {
             <Input
               placeholder="Enter a secret code to verify bid later on"
               value={input.confirmKey}
-              onChange={(_, value) => setInput({ ...input, confirmKey: value })}
+              onChange={(event) =>
+                setInput({ ...input, confirmKey: event.target.value })
+              }
             />
           </Space>
         </Modal>

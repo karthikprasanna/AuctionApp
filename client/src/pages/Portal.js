@@ -102,7 +102,7 @@ const Portal = ({ fetchBalance }) => {
         centered
         visible={modal.visible}
         onOk={() => {
-          message.loading("Adding Item ..", 1);
+          message.loading("Adding Item ..", 0.6);
           contract.methods
             .addItem(
               modal.itemName,
@@ -113,7 +113,7 @@ const Portal = ({ fetchBalance }) => {
             .send({ from: userAccount, gas: 3000000 })
             .then((item) => {
               fetchListings();
-              message.success("Item Added Successfully", 2.5);
+              message.success("Item Added Successfully", 1);
               fetchBalance();
             })
             .catch((err) => {

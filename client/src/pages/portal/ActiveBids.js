@@ -13,9 +13,7 @@ import {
 } from "antd";
 
 import { BlockchainContext } from "../../App";
-import { sampleImages } from "../../components/SampleImages";
-
-const { Meta } = Card;
+import ItemDetailsCard from "../../components/ItemDetailsCard";
 
 const ItemCard = ({
   item,
@@ -33,7 +31,7 @@ const ItemCard = ({
           .send({ from: userAccount, gas: 3000000 })
           .then((item) => {
             fetchListings();
-            message.success("Bid closed", 2.5);
+            message.success("Bidding closed", 1);
             fetchBalance();
           })
           .catch((err) => {
@@ -48,58 +46,7 @@ const ItemCard = ({
 
   return (
     <Col>
-      <Card
-        style={{ width: 300, margin: "20px 0" }}
-        cover={
-          <img
-            style={{ width: "100%", maxHeight: "200px", objectFit: "cover" }}
-            src={sampleImages[(item.itemId - 1) % 9]}
-          />
-        }
-        actions={actions}
-      >
-        <Meta title={item.itemName} description={item.itemDescription} />
-        {item.auctionType == 0 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="blue"
-          >
-            First Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 1 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="volcano"
-          >
-            Second Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 2 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="magenta"
-          >
-            Average Price Auction
-          </Tag>
-        )}
-        {item.auctionType == 3 && (
-          <Tag
-            style={{
-              marginTop: "20px",
-            }}
-            color="green"
-          >
-            Price: {item.askingPrice} Wei
-          </Tag>
-        )}
-      </Card>
+      <ItemDetailsCard item={item} actions={actions} />
     </Col>
   );
 };

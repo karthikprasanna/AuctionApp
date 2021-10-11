@@ -548,11 +548,11 @@ contract Auction {
                 str = string(abi.encodePacked(str, uintToStr(at)));
                 str = string(abi.encodePacked(str, ',"auctionStatus":'));
                 str = string(abi.encodePacked(str, uintToStr(ast)));
-                str = string(abi.encodePacked(str, ',"sellerId": '));
+                str = string(abi.encodePacked(str, ',"sellerId": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
-                str = string(abi.encodePacked(str, ',"alreadyBid": "'));
+                str = string(abi.encodePacked(str, '","alreadyBid": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidders[msg.sender]))));
-                str = string(abi.encodePacked(str, ',"bidWinner": "'));
+                str = string(abi.encodePacked(str, '","bidWinner": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidWinner.buyer))));
                 if(i != itemsCount)
                 {

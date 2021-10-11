@@ -50,10 +50,10 @@ const Routes = (props) => {
               <Portal fetchBalance={fetchBalance} />
             </Route>
             <Route exact path="/mybids">
-              <MyBids />
+              <MyBids fetchBalance={fetchBalance} />
             </Route>
             <Route exact path="/orders">
-              <Orders />
+              <Orders fetchBalance={fetchBalance} />
             </Route>
             <Route>
               <NotFound />
