@@ -57,7 +57,7 @@ const ItemCard = ({ item, setModal, generateIdentity }) => {
 const Marketplace = ({ fetchBalance }) => {
   const [items, setItems] = useState([]);
 
-  const { userAccount, contract } = useContext(BlockchainContext);
+  const { web3, userAccount, contract } = useContext(BlockchainContext);
   const [loading, setLoading] = useState(true);
 
   const fetchListings = () => {
@@ -196,9 +196,11 @@ const Marketplace = ({ fetchBalance }) => {
           visible={modal.visible}
           onOk={() => {
             message.loading("Placing the bid..", 0.6);
-            const hashedString = keccak256(
-              userAccount + input.confirmKey + input.bid
+            const hashedString = web3.utils.sha3(
+              web3.utils.toHex(input.confirmKey + input.bid),
+              { encoding: "hex" }
             );
+            console.log(hashedString);
             contract.methods
               .bidItem(modal.itemId, hashedString)
               .send({

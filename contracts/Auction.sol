@@ -228,7 +228,7 @@ contract Auction {
         }
         else{
             bytes32 hashValue = keccak256(
-                abi.encodePacked(msg.sender, password, msg.value)
+                abi.encodePacked(password, uintToStr(msg.value))
             );
             if(itemsList[item_id].hashedBids[hashValue] != true){
                 revert("Invalid details");
