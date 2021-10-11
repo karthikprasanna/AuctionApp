@@ -33,12 +33,16 @@ const App = (props) => {
         // Get the contract instance.
         const networkId = await web3.eth.net.getId();
         const deployedNetwork = AuctionContract.networks[networkId];
+       
+        let userAccount = await web3.eth.getCoinbase();
         const contract = new web3.eth.Contract(
           AuctionContract.abi,
-          deployedNetwork && deployedNetwork.address
+          deployedNetwork && deployedNetwork.address,
+          {
+            from: userAccount, // default from address
+            gasPrice: '20000000000' // default gas price in wei, 20 gwei in this case
+            }
         );
-
-        let userAccount = await web3.eth.getCoinbase();
 
         // Set web3, accounts, and contract to the state, and then proceed with an
         // example of interacting with the contract's methods.
