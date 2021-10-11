@@ -552,6 +552,8 @@ contract Auction {
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
                 str = string(abi.encodePacked(str, '","alreadyBid": "'));
                 str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidders[msg.sender]))));
+                str = string(abi.encodePacked(str, '","bidWinner": "'));
+                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidWinner.buyer))));
                 if(i != itemsCount)
                 {
                     str = string(abi.encodePacked(str, '"},'));
