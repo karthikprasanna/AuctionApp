@@ -1,5 +1,7 @@
+import "antd/dist/antd.dark.css";
+import "./App.css";
+
 import React, { useState, useEffect, createContext } from "react";
-import { BrowserRouter, Switch, Route } from "react-router-dom";
 import FadeIn from "react-fade-in";
 import Lottie from "react-lottie";
 
@@ -7,9 +9,6 @@ import getWeb3 from "./getWeb3";
 import AuctionContract from "./contracts/Auction.json";
 import Layout from "./pages/Layout";
 import * as loader from "./assets/loader.json";
-
-import "antd/dist/antd.dark.css";
-import "./App.css";
 
 export const BlockchainContext = createContext();
 
@@ -33,15 +32,15 @@ const App = (props) => {
         // Get the contract instance.
         const networkId = await web3.eth.net.getId();
         const deployedNetwork = AuctionContract.networks[networkId];
-       
+
         let userAccount = await web3.eth.getCoinbase();
         const contract = new web3.eth.Contract(
           AuctionContract.abi,
           deployedNetwork && deployedNetwork.address,
           {
             from: userAccount, // default from address
-            gasPrice: '20000000000' // default gas price in wei, 20 gwei in this case
-            }
+            gasPrice: "20000000000", // default gas price in wei, 20 gwei in this case
+          }
         );
 
         // Set web3, accounts, and contract to the state, and then proceed with an

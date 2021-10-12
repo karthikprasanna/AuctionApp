@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import {
-  Card,
-  Avatar,
   Row,
   Col,
-  Tag,
   Modal,
   InputNumber,
   message,
@@ -14,12 +11,10 @@ import {
   Space,
 } from "antd";
 import EthCrypto from "eth-crypto";
-import keccak256 from "keccak256";
 import { CopyOutlined } from "@ant-design/icons";
 
 import { BlockchainContext } from "../App";
 import { sampleImages } from "../components/SampleImages";
-import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 
 import ItemDetailsCard from "../components/ItemDetailsCard";
 
@@ -64,7 +59,7 @@ const MyBids = ({ fetchBalance }) => {
       .call()
       .then((data) => JSON.parse(data))
       .then((data) => {
-        console.log(data);
+        // console.log(data);
         setItems(data.filter((item) => item.alreadyBid == "0x01"));
         setLoading(false);
       })
@@ -109,6 +104,7 @@ const MyBids = ({ fetchBalance }) => {
                 <ItemCard
                   item={item}
                   setModal={setModal}
+                  key={key}
                   generateIdentity={generateIdentity}
                 />
               );
@@ -169,9 +165,6 @@ const MyBids = ({ fetchBalance }) => {
           <InputNumber
             placeholder="Enter your previously sent bid amount"
             style={{ width: "100%" }}
-            addonAfter={
-              <EthereumIcon style={{ height: "1rem", marginRight: "5px" }} />
-            }
             value={input.bid != 0 && input.bid}
             onChange={(value) => setInput({ ...input, bid: value })}
           />

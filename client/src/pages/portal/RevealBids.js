@@ -1,32 +1,12 @@
 import React, { useState, useEffect, useContext } from "react";
-import {
-  Row,
-  Col,
-  Card,
-  Tag,
-  Modal,
-  message,
-  InputNumber,
-  Input,
-  Space,
-  Select,
-} from "antd";
+import { Row, Col, Modal, message, Input, Space } from "antd";
 import EthCrypto from "eth-crypto";
 
 import { BlockchainContext } from "../../App";
 import { sampleImages } from "../../components/SampleImages";
 import ItemDetailsCard from "../../components/ItemDetailsCard";
 
-const { Meta } = Card;
-
-const ItemCard = ({
-  item,
-  setModal,
-  isPortal,
-  fetchListings,
-  fetchBalance,
-}) => {
-  const { userAccount, contract } = useContext(BlockchainContext);
+const ItemCard = ({ item, setModal }) => {
   let actions = [];
   if (item.auctionType == 3 && item.itemStatus == 2) {
     actions = [

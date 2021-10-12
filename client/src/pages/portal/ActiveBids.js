@@ -1,27 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
-import {
-  Row,
-  Col,
-  Card,
-  Tag,
-  Modal,
-  message,
-  InputNumber,
-  Input,
-  Space,
-  Select,
-} from "antd";
+import { Row, Col, message } from "antd";
 
 import { BlockchainContext } from "../../App";
 import ItemDetailsCard from "../../components/ItemDetailsCard";
 
-const ItemCard = ({
-  item,
-  setModal,
-  isPortal,
-  fetchListings,
-  fetchBalance,
-}) => {
+const ItemCard = ({ item, fetchListings, fetchBalance }) => {
   const { userAccount, contract } = useContext(BlockchainContext);
   let actions = [
     <div

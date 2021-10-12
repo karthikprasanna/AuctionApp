@@ -1,24 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
-import {
-  Card,
-  Avatar,
-  Row,
-  Col,
-  Tag,
-  Modal,
-  InputNumber,
-  message,
-  Spin,
-  Input,
-  Tooltip,
-  Space,
-} from "antd";
+import { Row, Col, Modal, message, Spin, Input, Tooltip, Space } from "antd";
 import EthCrypto from "eth-crypto";
 import { CopyOutlined } from "@ant-design/icons";
 
 import { BlockchainContext } from "../App";
 import { sampleImages } from "../components/SampleImages";
-import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 import ItemDetailsCard from "../components/ItemDetailsCard";
 
 const ItemCard = ({ item, setModal }) => {
@@ -55,7 +41,7 @@ const Orders = ({ fetchBalance }) => {
       .call()
       .then((data) => JSON.parse(data))
       .then((data) => {
-        console.log(data);
+        // console.log(data);
         setItems(data.filter((item) => item.bidWinner == userAccount));
         setLoading(false);
       })
@@ -89,7 +75,7 @@ const Orders = ({ fetchBalance }) => {
         ) : (
           <Row align="center" gutter={[26, 26]}>
             {items.map((item, key) => {
-              return <ItemCard item={item} setModal={setModal} />;
+              return <ItemCard item={item} key={key} setModal={setModal} />;
             })}
           </Row>
         ))}
