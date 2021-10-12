@@ -42,21 +42,20 @@ To run this project:
 
 We are taking special care to prevent leakage of bid amounts before bidding period is over.
 
-- **WHY** : Because, if a person knows the bid value he can be sure to win / influence the result of auction.
+- **Why** : Because, if a person knows the bid value he can be sure to win / influence the result of auction.
 
   - For the first price auction, he can become the winner. Suppose he is willing to go till 300Wei but he finds out max bid is 200, he will bid 201 and get away with it.
   - For the second price auction he can make the winner overpay. Suppose he knows highest and 2nd highest bids are 300 and 200. So winner is to pay 200. But he can bid 299, and make the winner pay.
   - In the second price, he can also become the winner.
   - In the average price, he can get the average and be sure to win the bid.
 
-- **HOW** : Our main aim is to keep the bidding values as long as people are bidding, or bidding round is active.
-- **BIDDING** :
-
+- **How** : Our main aim is to keep the bidding values as long as people are bidding, or bidding round is active.
+- **Bidding** :
   - In the bidding round, bidders will not send the bid value. They will perform off chain hashing keccak256(password+bid_value+account_public_key).
   - We use password so that someone cannot loop over bid_value and find out because account_public_key is already public.
   - We share this hash value as our bid in the bidding round.
 
-- **VERIFICATION** : Verification round runs once Bidding round is closed. In this round bidding is no more happening and not allowed.
+- **Verification** : Verification round runs once Bidding round is closed. In this round bidding is no more happening and not allowed.
   - For verification, bidder gives his encryption keys (generated via EthCrypto), to encrypt the delivery string if he wins.
   - He also gives password and pays the bid value to the escrow account. The escrow account accepts the bid if and only if the hash matches with keccak256(password+msg.value+msg.sender).
   - In this way, bid amount is only revealed once the bidding period is over.
