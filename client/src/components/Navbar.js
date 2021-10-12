@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState } from "react";
 import { Layout, Menu, Row, Col } from "antd";
 import { Link, useLocation } from "react-router-dom";
 
-import { BlockchainContext } from "../App";
 import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 
 const { Header } = Layout;

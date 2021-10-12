@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import {
-  Card,
-  Avatar,
   Row,
   Col,
-  Tag,
   Modal,
   InputNumber,
   message,
@@ -14,17 +11,15 @@ import {
   Space,
 } from "antd";
 import EthCrypto from "eth-crypto";
-import keccak256 from "keccak256";
 import { CopyOutlined } from "@ant-design/icons";
 
 import { BlockchainContext } from "../App";
 import { sampleImages } from "../components/SampleImages";
-import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 import ItemDetailsCard from "../components/ItemDetailsCard";
 
 const ItemCard = ({ item, setModal, generateIdentity }) => {
   let actions = [];
-  console.log(item);
+  // console.log(item);
   if (item.auctionType == 3) {
     actions = [
       <div
@@ -110,6 +105,7 @@ const Marketplace = ({ fetchBalance }) => {
                 <ItemCard
                   item={item}
                   setModal={setModal}
+                  key={key}
                   generateIdentity={generateIdentity}
                 />
               );
@@ -200,7 +196,7 @@ const Marketplace = ({ fetchBalance }) => {
               web3.utils.toHex(input.confirmKey + input.bid),
               { encoding: "hex" }
             );
-            console.log(hashedString);
+            // console.log(hashedString);
             contract.methods
               .bidItem(modal.itemId, hashedString)
               .send({
@@ -248,9 +244,6 @@ const Marketplace = ({ fetchBalance }) => {
             <InputNumber
               placeholder="Enter your bid amount"
               style={{ width: "100%" }}
-              addonAfter={
-                <EthereumIcon style={{ height: "1rem", marginRight: "5px" }} />
-              }
               value={input.bid != 0 && input.bid}
               onChange={(value) => setInput({ ...input, bid: value })}
             />
