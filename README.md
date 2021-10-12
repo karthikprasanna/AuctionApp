@@ -2,6 +2,8 @@
 
 Auction Bay is a blockchain based shopping portal. It provides several secured methods to sell, auction and buy products. It hosts a dark-minimal interface, developed using React JS.
 
+Team Name: BlockDaggers
+
 ## Instructions
 
 To run this project:
@@ -51,6 +53,7 @@ We are taking special care to prevent leakage of bid amounts before bidding peri
 
 - **How** : Our main aim is to keep the bidding values as long as people are bidding, or bidding round is active.
 - **Bidding** :
+
   - In the bidding round, bidders will not send the bid value. They will perform off chain hashing keccak256(password+bid_value+account_public_key).
   - We use password so that someone cannot loop over bid_value and find out because account_public_key is already public.
   - We share this hash value as our bid in the bidding round.
