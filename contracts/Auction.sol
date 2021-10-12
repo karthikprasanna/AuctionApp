@@ -291,7 +291,7 @@ contract Auction {
             itemsList[item_id].bidWinner = maxBidder;
             itemsList[item_id].final_price = secondMaxBid;
         } else if(itemsList[item_id].auctionType == AUCTION_TYPE.AVG_PRICE) {
-            uint256 minDiff = 0;
+            uint256 minDiff = uint256(-1);
             Bidder memory avgBidder;
             uint256 n = itemsList[item_id].verifiedBids.length;
             for (uint256 i = 0; i < n; i++) {
@@ -300,6 +300,7 @@ contract Auction {
                     .price * n;
                 if (abs(currentBidPrice, totalBid) < minDiff) {
                     avgBidder = itemsList[item_id].verifiedBids[i];
+                    minDiff = abs(currentBidPrice, totalBid); 
                 }
 
                 itemsList[item_id].bidWinner = avgBidder;
