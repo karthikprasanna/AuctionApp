@@ -114,6 +114,6 @@ The bidders transfer their bids to escrow, and the seller gets the payment only 
 
 ## Delivery
 
-- For delivery, we are encrypting the delivery string (NEtFLIX access token) with `EthCrypto public key` of the `winner bidder`.
+- For delivery, we are encrypting the delivery string (NETFLIX access token) with `EthCrypto public key` of the `winner bidder`.
 - The bidders will provide their public keys while giving proofs / verification for their bids. The seller chooses the winner's public key to encrypt the string and make it public on blockchain.
 - But since the key is encrypted, the actual token is accessible only by the winner bidder because he has the private key.
