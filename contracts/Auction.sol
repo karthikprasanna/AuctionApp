@@ -200,7 +200,7 @@ contract Auction {
             itemsList[item_id].biddersCount != 0,
             "No Bidder"
         );
-        if(itemsList[item_id].AUCTION_TYPE == AUCTION_TYPE.SECOND_PRICE) {
+        if(itemsList[item_id].auctionType == AUCTION_TYPE.SECOND_PRICE) {
             require(
                 itemsList[item_id].biddersCount >= 2,
                 "Atleast two people should bid for vickery auction"
@@ -271,7 +271,7 @@ contract Auction {
             "No one verified bid"
         );
 
-        if(itemsList[item_id].AUCTION_TYPE == AUCTION_TYPE.SECOND_PRICE) {
+        if(itemsList[item_id].auctionType == AUCTION_TYPE.SECOND_PRICE) {
             require(
                 itemsList[item_id].verifiedBids.length >= 2,
                 "Atleast two people should verify for vickery auction"
