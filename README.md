@@ -1,8 +1,6 @@
 # Auction-Bay
 
-Auction Bay is a blockchain based startup, funded by Y-combinator and soon to be fortune 500. It provides several secured methods to sell, auction and buy products, in a dark-minimal interface. Soon this platform is going to host a 50% off diwali sale, and a hidden betting platform for WC20. Excited? join us on our pathway to success.
-
-Soon to release our IPO. _Wink, Wink_
+Auction Bay is a blockchain based shopping portal. It provides several secured methods to sell, auction and buy products. It hosts a dark-minimal interface, developed using React JS.
 
 ## Instructions
 
@@ -25,8 +23,20 @@ To run this project:
 
 ```bash
     cd client
+    npm install
     npm run start
 ```
+
+## Dependencies
+
+- React JS
+- Ant Design
+- web3.js
+- eth-crypto
+- keccak256
+- truffle
+
+# Programming Logic
 
 ## Silent Auction - Keeping Bids Secret
 
@@ -107,12 +117,3 @@ The bidders transfer their bids to escrow, and the seller gets the payment only 
 - For delivery, we are encrypting the delivery string (NEtFLIX access token) with `EthCrypto public key` of the `winner bidder`.
 - The bidders will provide their public keys while giving proofs / verification for their bids. The seller chooses the winner's public key to encrypt the string and make it public on blockchain.
 - But since the key is encrypted, the actual token is accessible only by the winner bidder because he has the private key.
-
-## Dependencies
-
-- React JS
-- Ant Design
-- web3.js
-- eth-crypto
-- keccak256
-- truffle
