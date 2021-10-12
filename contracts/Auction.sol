@@ -494,6 +494,68 @@ contract Auction {
         return string(str);
     }
 
+    function printHelper(uint i, bool firstItem) public view returns (string memory) {
+        string memory str = "";
+        uint at = 0;
+        if(itemsList[i].auctionType == AUCTION_TYPE.SECOND_PRICE){
+            at=1;
+        }
+        else if(itemsList[i].auctionType == AUCTION_TYPE.AVG_PRICE){
+            at = 2;
+        }
+        else if(itemsList[i].auctionType == AUCTION_TYPE.FIXED){
+            at = 3;
+        }
+
+        uint ast = 0;
+        if(itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION){
+            ast = 1;
+        }
+        else if(itemsList[i].auctionStatus == AUCTION_STATUS.REVEALED)
+        {
+            ast = 2;
+        }
+        
+        uint ist = 0;
+        if(itemsList[i].status == ITEM_STATUS.OPEN){
+            ist = 1;
+        }
+        else if(itemsList[i].status == ITEM_STATUS.BUYING){
+            ist = 2;
+        }
+        else if(itemsList[i].status == ITEM_STATUS.BOUGHT){
+            ist = 3;
+        }
+        
+        if(!firstItem){
+            str = string(abi.encodePacked(str, ','));    
+        }
+
+        str = string(abi.encodePacked(str, '{"itemId":'));
+        str = string(abi.encodePacked(str, uintToStr(i)));
+        str = string(abi.encodePacked(str, ',"itemName":"'));
+        str = string(abi.encodePacked(str, itemsList[i].item_name));
+        str = string(abi.encodePacked(str, '","itemDescription": "'));
+        str = string(abi.encodePacked(str, itemsList[i].item_desc));
+        str = string(abi.encodePacked(str, '","itemStatus":'));
+        str = string(abi.encodePacked(str, uintToStr(ist)));
+        str = string(abi.encodePacked(str, ',"askingPrice":'));
+        str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
+        str = string(abi.encodePacked(str, ',"auctionType":'));
+        str = string(abi.encodePacked(str, uintToStr(at)));
+        str = string(abi.encodePacked(str, ',"auctionStatus":'));
+        str = string(abi.encodePacked(str, uintToStr(ast)));
+        str = string(abi.encodePacked(str, ',"sellerId": "'));
+        str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
+        str = string(abi.encodePacked(str, '","alreadyBid": "'));
+        str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidders[msg.sender]))));
+        str = string(abi.encodePacked(str, '","bidWinner": "'));
+        str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidWinner.buyer))));
+        str = string(abi.encodePacked(str, '"}'));
+
+        return str;
+    }
+
     /**
      * Returns the items present in the marketplace, which are
      * ready to be sold
@@ -503,63 +565,12 @@ contract Auction {
     function viewActiveListings(bool allItems) public view returns (string memory) {
         string memory str = "[";
         bool firstItem = true;
+
         for (uint256 i = 1; i <= itemsCount; i++) {
-            if (allItems || itemsList[i].auctionStatus == AUCTION_STATUS.ONGOING || (itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION && itemsList[i].auctionType == AUCTION_TYPE.FIXED)) {
-                uint at = 0;
-                if(itemsList[i].auctionType == AUCTION_TYPE.SECOND_PRICE){
-                    at=1;
-                }
-                else if(itemsList[i].auctionType == AUCTION_TYPE.AVG_PRICE){
-                    at = 2;
-                }
-                else if(itemsList[i].auctionType == AUCTION_TYPE.FIXED){
-                    at = 3;
-                }
-                uint ast = 0;
-                if(itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION){
-                    ast = 1;
-                }
-                else if(itemsList[i].auctionStatus == AUCTION_STATUS.REVEALED)
-                {
-                    ast = 2;
-                }
-                
-                uint ist = 0;
-                if(itemsList[i].status == ITEM_STATUS.OPEN){
-                    ist = 1;
-                }
-                else if(itemsList[i].status == ITEM_STATUS.BUYING){
-                    ist = 2;
-                }
-                else if(itemsList[i].status == ITEM_STATUS.BOUGHT){
-                    ist = 3;
-                }
-                
-                if(!firstItem){
-                    str = string(abi.encodePacked(str, ','));    
-                }
+            if (allItems || itemsList[i].auctionStatus == AUCTION_STATUS.ONGOING || 
+                (itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION && itemsList[i].auctionType == AUCTION_TYPE.FIXED)) {
+                str = string(abi.encodePacked(str, printHelper(i, firstItem)));
                 firstItem = false;
-                str = string(abi.encodePacked(str, '{"itemId":'));
-                str = string(abi.encodePacked(str, uintToStr(i)));
-                str = string(abi.encodePacked(str, ',"itemName":"'));
-                str = string(abi.encodePacked(str, itemsList[i].item_name));
-                str = string(abi.encodePacked(str, '","itemDescription": "'));
-                str = string(abi.encodePacked(str, itemsList[i].item_desc));
-                str = string(abi.encodePacked(str, '","itemStatus":'));
-                str = string(abi.encodePacked(str, uintToStr(ist)));
-                str = string(abi.encodePacked(str, ',"askingPrice":'));
-                str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
-                str = string(abi.encodePacked(str, ',"auctionType":'));
-                str = string(abi.encodePacked(str, uintToStr(at)));
-                str = string(abi.encodePacked(str, ',"auctionStatus":'));
-                str = string(abi.encodePacked(str, uintToStr(ast)));
-                str = string(abi.encodePacked(str, ',"sellerId": "'));
-                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
-                str = string(abi.encodePacked(str, '","alreadyBid": "'));
-                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidders[msg.sender]))));
-                str = string(abi.encodePacked(str, '","bidWinner": "'));
-                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidWinner.buyer))));
-                str = string(abi.encodePacked(str, '"}'));
             }
         }
         str = string(abi.encodePacked(str, "]"));
@@ -571,56 +582,8 @@ contract Auction {
         bool firstItem = true;
         for (uint256 i = 1; i <= itemsCount; i++) {
             if (itemsList[i].seller == seller_id) {
-                uint at = 0;
-                if(itemsList[i].auctionType == AUCTION_TYPE.SECOND_PRICE){
-                    at=1;
-                }
-                else if(itemsList[i].auctionType == AUCTION_TYPE.AVG_PRICE){
-                    at = 2;
-                }
-                else if(itemsList[i].auctionType == AUCTION_TYPE.FIXED){
-                    at = 3;
-                }
-                uint ast = 0;
-                if(itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION){
-                    ast = 1;
-                }
-                else if(itemsList[i].auctionStatus == AUCTION_STATUS.REVEALED)
-                {
-                    ast = 2;
-                }
-                uint ist = 0;
-                if(itemsList[i].status == ITEM_STATUS.OPEN){
-                    ist = 1;
-                }
-                else if(itemsList[i].status == ITEM_STATUS.BUYING){
-                    ist = 2;
-                }
-                else if(itemsList[i].status == ITEM_STATUS.BOUGHT){
-                    ist = 3;
-                }
-
-                if(!firstItem){
-                    str = string(abi.encodePacked(str, ','));    
-                }
+                str = string(abi.encodePacked(str, printHelper(i, firstItem)));
                 firstItem = false;
-                str = string(abi.encodePacked(str, '{"itemId":'));
-                str = string(abi.encodePacked(str, uintToStr(i)));
-                str = string(abi.encodePacked(str, ',"itemName":"'));
-                str = string(abi.encodePacked(str, itemsList[i].item_name));
-                str = string(abi.encodePacked(str, '","itemDescription": "'));
-                str = string(abi.encodePacked(str, itemsList[i].item_desc));
-                str = string(abi.encodePacked(str, '","itemStatus":'));
-                str = string(abi.encodePacked(str, uintToStr(ist)));
-                str = string(abi.encodePacked(str, ',"askingPrice":'));
-                str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
-                str = string(abi.encodePacked(str, ',"auctionType":'));
-                str = string(abi.encodePacked(str, uintToStr(at)));
-                str = string(abi.encodePacked(str, ',"auctionStatus":'));
-                str = string(abi.encodePacked(str, uintToStr(ast)));
-                str = string(abi.encodePacked(str, ',"sellerId": "'));
-                str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
-                str = string(abi.encodePacked(str, '"}'));
             }
         }
         str = string(abi.encodePacked(str, "]"));
