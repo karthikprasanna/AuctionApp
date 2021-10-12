@@ -193,7 +193,7 @@ const Marketplace = ({ fetchBalance }) => {
           onOk={() => {
             message.loading("Placing the bid..", 0.6);
             const hashedString = web3.utils.sha3(
-              web3.utils.toHex(input.confirmKey + input.bid),
+              web3.utils.utf8ToHex(input.confirmKey + input.bid),
               { encoding: "hex" }
             );
             // console.log(hashedString);
