@@ -200,6 +200,12 @@ contract Auction {
             itemsList[item_id].biddersCount != 0,
             "No Bidder"
         );
+        if(itemsList[item_id].AUCTION_TYPE == AUCTION_TYPE.SECOND_PRICE) {
+            require(
+                itemsList[item_id].biddersCount >= 2,
+                "Atleast two people should bid for vickery auction"
+            );  
+        }
         itemsList[item_id].auctionStatus = AUCTION_STATUS.VERIFICATION;
     }
 
@@ -264,6 +270,13 @@ contract Auction {
             itemsList[item_id].verifiedBids.length > 0,
             "No one verified bid"
         );
+
+        if(itemsList[item_id].AUCTION_TYPE == AUCTION_TYPE.SECOND_PRICE) {
+            require(
+                itemsList[item_id].verifiedBids.length >= 2,
+                "Atleast two people should verify for vickery auction"
+            );  
+        }
 
         uint256 maxBid = 0;
         Bidder memory maxBidder;
