@@ -1,19 +1,9 @@
+# Programming Logic & Documentation
+
+- Team members: Block-Daggers 
 
 
-
-# Frontend & UX 
-
---To be added by SHLOK--
-points to keep in mind
-> how we used modularity in code        
-> tech stack used (include styling stuff also maybe)        
-> screenshots of frontend if possible (1-2 of add item, seller-portal and/or marketplace). 
-
-# Programming Logic
-
-
-
-# Silent Auction - Keeping Bids Secret
+## Silent Auction - Keeping Bids Secret
 
 We are taking special care to prevent leakage of bid amounts before bidding period is over. 
 
@@ -38,56 +28,60 @@ We are taking special care to prevent leakage of bid amounts before bidding peri
 
 
 
-# Auctions
+## Auctions
 
-## Implementation Of Escrow for Trustlesness
+### Implementation Of Escrow for Trustlesness
 
 The bidders transfer their bids to escrow, and the seller gets the payment only when he delivers the string. In this way, the contract implements escrow payment to ensure trustless delivery.
 
 
-## First Price Auction
+### First Price Auction
 
-### Introduction
+#### Introduction
 * Winner is the bidder whose bid is the highest. 
 * Payable amount is the amount bid by the highest bidder. Paid by the winner.
 
-### Security
+#### Security
 * Since the bids are not revealed till the auction is over, we can be sure that the first price auction will be secure. 
 
-## Second Price Auction
+### Second Price Auction
 
-### Introduction
+#### Introduction
 * Winner is the bidder whose bid is the highest. 
 * Payable amount is the amount bid by the second highest bidder. Paid by the winner.
 
-### Security
+#### Security
 * Since the bids are not revealed till the auction is over, we can be sure that the first price auction will be secure. 
 
-## Average Price Auction
+### Average Price Auction
 
-### Introduction
+#### Introduction
 * Winner is the bidder whose bid is the highest. 
 * Payable amount is the average amount bid (bid & verified) by the bidders. Paid by the winner.
 
-### Security
+#### Security
 * Since the bids are not revealed till the auction is over, we can be sure that the first price auction will be secure. 
 * They can move the average to their desired value (say 1000Wei) by doing a sybil attack via multiple accounts to move the avg. closer by bidding 1000Wei. However, this requires multi-fold stake (suppose for 1000 participants with 1 adversary, it requires around 1000 or more times the value). This stake disincentivizes the attack because duration of holding a money is more valuable than amount of money save (which is 1000th of what we staked).
 
-## Direct Purchase 
+### Direct Purchase 
 
-## Introduction 
+### Introduction 
 * Person who buys at the decided fixed price first gets the product. 
 
-## Security 
+### Security 
 * Same as that in assignment 1. No additional security needed. 
 
 
-# Delivery 
+## Delivery 
 
 * For delivery, we are encrypting the delivery string (NEtFLIX access token) with `EthCrypto public key` of the `winner bidder`.          
 * The bidders will provide their public keys while giving proofs / verification for their bids. The seller chooses the winner's public key to encrypt the string and make it public on blockchain. 
 * But since the key is encrypted, the actual token is accessible only by the winner bidder because he has the private key. 
 
+## Frontend & UX 
 
-
-
+--To be added by SHLOK--
+points to keep in mind
+> how we used modularity in code        
+> tech stack used (include styling stuff also maybe)        
+> screenshots of frontend if possible (1-2 of add item, seller-portal and/or marketplace). 
