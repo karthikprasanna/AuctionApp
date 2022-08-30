@@ -1,609 +1,522 @@
-pragma solidity ^0.5.0;
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.8.7;
 
-/**
- * @title   Screen Selling Platform
- * @notice  This contract abstracts the screen selling
- * marketplace and provides functions to perform
- * transactions
- * @author  Team Block-Daggers
- *
- */
-contract Auction {
-    /**
-     * This enum defines status of screen (item) present in the
-     * marketplace
-     *
-     */
-    enum ITEM_STATUS {
-        LOCKED, /// Item is being processed, hence is not listed in marketplace
-        OPEN, /// Item is being sold at marketplace
-        BUYING, /// Buyer has paid for the item, but hasn't received it yet
-        BOUGHT /// Buyer received the item
-    }
-
-    enum AUCTION_STATUS {
+contract MyContract {
+    enum AuctionStatus {
         ONGOING,
-        VERIFICATION,
-        REVEALED
+        PROCESSING,
+        OVER
+    }
+    AuctionStatus auctionStatus = AuctionStatus.ONGOING;
+
+    // struct for roles
+    struct Manufacturer {
+        string name;
+        string supplierForTyres;
+        string supplierForBody;
+        address manufacturerAddress;
+        string hashedTyreBid;
+        string hashedCarBodyBid;
     }
 
-    enum AUCTION_TYPE {
-        FIRST_PRICE,
-        SECOND_PRICE,
-        AVG_PRICE,
-        FIXED
+    struct CarBodySupplier {
+        string name;
+        //string supplierType;
+        address carBodySupplierAddress;
     }
 
-    /**
-     * This struct defines the blueprint of each screen (item)
-     * present in the marketplace
-     *
-     */
-    struct Listing {
-        address payable seller;
-        ITEM_STATUS status;
-        string item_name;
-        string item_desc;
-        string secret_string;
-        uint256 asking_price;
-        uint256 final_price;
-        mapping(bytes32 => bool) hashedBids;
-        uint256 biddersCount;
-        mapping(address => bool) bidders;
-        mapping(address => bool) isVerified;
-        Bidder[] verifiedBids;
-        Bidder bidWinner;
-        AUCTION_STATUS auctionStatus;
-        AUCTION_TYPE auctionType;
+    struct CarTyreSupplier {
+        string name;
+        //string supplierType;
+        string suppliesTo;
+        address carTyreSupplierAddress;
     }
 
-    struct Bidder {
-        address payable buyer;
-        uint256 price;
-        string public_key;
+    //variables used for actors
+
+    Manufacturer TataManufacturer;
+    Manufacturer MaruthiManufacturer;
+
+    CarBodySupplier carBodySupplier;
+
+    CarTyreSupplier MrfCarTyreSupplier;
+    CarTyreSupplier CeatCarTyreSupplier;
+
+    //add modifiers to the view functions
+    modifier OnlyCarBodySupplier() {
+        require(msg.sender == carBodySupplier.carBodySupplierAddress);
+        _;
     }
 
-    uint256 private itemsCount;
-    mapping(uint256 => Listing) private itemsList;
-
-    /**
-     * Initialising smart contract to the scenario when no item
-     * is present in the marketplace
-     *
-     */
-    constructor() public {
-        itemsCount = 0;
-    }
-
-    /**
-     * Allows only seller of item to access the function
-     *
-     * @param index unique id of item
-     */
-    modifier onlyItemSeller(uint256 index) {
-        require(index <= itemsCount && index > 0, "Item not present in list");
+    modifier OnlyTATA() {
         require(
-            msg.sender == itemsList[index].seller,
-            "You are not seller of item"
+            msg.sender == TataManufacturer.manufacturerAddress,
+            "Access is available only to Tata"
         );
         _;
     }
 
-    /**
-     * Allows only buyer or seller to access the function
-     *
-     * @param index unique id of item
-     */
-    modifier onlyItemOwnerOrSeller(uint256 index) {
-        require(index <= itemsCount && index > 0, "Item not present in list");
-
+    modifier OnlyMaruti() {
         require(
-            msg.sender == itemsList[index].seller ||
-                (msg.sender == itemsList[index].bidWinner.buyer &&
-                    itemsList[index].status == ITEM_STATUS.BOUGHT),
-            "You are not owner or seller of item"
+            msg.sender == MaruthiManufacturer.manufacturerAddress,
+            "Access is available only to Maruti"
+        );
+
+        _;
+    }
+
+    modifier OnlyMrf() {
+        require(
+            msg.sender == MrfCarTyreSupplier.carTyreSupplierAddress,
+            "Access is available only to Mrf"
         );
         _;
     }
 
-    /**
-     * Checks empty string
-     * 
-     * @param str string
-     */
-    modifier nonEmpty(string memory str){
-        require(bytes(str).length > 0, "String should be non empty");
+    modifier OnlyCeat() {
+        require(
+            msg.sender == CeatCarTyreSupplier.carTyreSupplierAddress,
+            "Access is available only to Ceat"
+        );
         _;
     }
 
-    /**
-     * Checks empty array
-     * 
-     * @param item_id id of the item
-     */
-    modifier nonEmptyBidders(uint256 item_id){
-        require(true, "No bidders found");
+    modifier WhenAuctionOngoing() {
+        require(
+            auctionStatus == AuctionStatus.ONGOING,
+            "The auction is not ongoing"
+        );
         _;
     }
 
-    /**
-     * Adds an item in the marketplace
-     * Used by: Seller
-     *
-     * @param _item_name name of item
-     * @param _item_desc description of item
-     * @param _asking_price asking price of item
-     */
-    function addItem(
-        string memory _item_name,
-        string memory _item_desc,
-        uint256 _asking_price,
-        uint256 _auction_type
-    ) 
-    public 
-    nonEmpty(_item_name)
-    nonEmpty(_item_desc)
-    returns (uint256) {
-        itemsCount++;
-        itemsList[itemsCount].status = ITEM_STATUS.LOCKED;
-        itemsList[itemsCount].item_desc = _item_desc;
-        itemsList[itemsCount].seller = msg.sender;
-        itemsList[itemsCount].item_name = _item_name;
-        itemsList[itemsCount].asking_price = _asking_price;
-        itemsList[itemsCount].status = ITEM_STATUS.OPEN;
-        itemsList[itemsCount].auctionStatus = AUCTION_STATUS.ONGOING;
-        if (_auction_type == 0) {
-            itemsList[itemsCount].auctionType = AUCTION_TYPE.FIRST_PRICE;
-        } else if (_auction_type == 1) {
-            itemsList[itemsCount].auctionType = AUCTION_TYPE.SECOND_PRICE;
-        } else if (_auction_type == 2) {
-            itemsList[itemsCount].auctionType = AUCTION_TYPE.AVG_PRICE;
-        } else {
-            itemsList[itemsCount].auctionStatus = AUCTION_STATUS.VERIFICATION;
-            itemsList[itemsCount].auctionType = AUCTION_TYPE.FIXED;
-        }
-        return itemsCount;
+    modifier WhenAuctionProcessing() {
+        require(
+            auctionStatus == AuctionStatus.PROCESSING,
+            "The auction is not in the processing stage"
+        );
+
+        _;
     }
 
-    function bidItem(uint256 item_id, bytes32 hashString) public {
-        require(
-            item_id <= itemsCount && item_id > 0,
-            "Item not present in list"
-        );
-        require(
-            itemsList[item_id].auctionStatus == AUCTION_STATUS.ONGOING,
-            "Auction not ongoing"
-        );
-        require(
-            itemsList[item_id].bidders[msg.sender] == false,
-            "Already bidded"
-        );
-        itemsList[item_id].hashedBids[hashString] = true;
-        itemsList[item_id].biddersCount += 1;
-        itemsList[item_id].bidders[msg.sender] = true;
+    modifier WhenAuctionOver() {
+        require(auctionStatus == AuctionStatus.OVER, "The auction is not over");
+        _;
     }
 
-    function closeBid(uint256 item_id) public nonEmptyBidders(item_id) {
-        require(
-            msg.sender == itemsList[item_id].seller || msg.sender == address(this),
-            'Access denied'
-        );
-        require(
-            item_id <= itemsCount && item_id > 0,
-            "Item not present in list"
-        );
-        require(
-            itemsList[item_id].auctionStatus == AUCTION_STATUS.ONGOING,
-            "Auction not ongoing"
-        );
-        require(
-            itemsList[item_id].biddersCount != 0,
-            "No Bidder"
-        );
-        if(itemsList[item_id].auctionType == AUCTION_TYPE.SECOND_PRICE) {
-            require(
-                itemsList[item_id].biddersCount >= 2,
-                "Atleast two people should bid for vickery auction"
-            );  
-        }
-        itemsList[item_id].auctionStatus = AUCTION_STATUS.VERIFICATION;
+    //variables for setting supply limits-------
+
+    uint256 CarTyreSupplierLimit_MRF;
+    uint256 CarTyreSupplierLimit_CEAT;
+    uint256 CarBodySupplierLimit_VEDANTHA;
+
+    //uint CarBodySupplierLimit_VEDANTHA;
+
+    uint256 NumberOfCarBodiesNeeded_TATA = numberOfCarBodiesNeeded_TATA();
+    uint256 NumberOfCarBodiesNeeded_MARUTHI = numberOfCarBodiesNeeded_MARUTHI();
+
+    //Listing all the manufacturers and suppliers------------------------------------------------------
+
+    function setTataManufacturer(
+        string memory Name,
+        string memory Tyres,
+        string memory Body
+    ) public {
+        TataManufacturer.name = Name;
+        TataManufacturer.supplierForTyres = Tyres;
+        TataManufacturer.supplierForBody = Body;
+        TataManufacturer.manufacturerAddress = msg.sender;
     }
 
-    function verifyBid(
-        uint256 item_id,
-        string memory password,
-        string memory public_key
-    ) public payable {
-        require(
-            item_id <= itemsCount && item_id > 0,
-            "Item not present in list"
-        );
-        require(
-            itemsList[item_id].auctionStatus == AUCTION_STATUS.VERIFICATION,
-            "Bid verification not in progress"
-        );
-        if(itemsList[item_id].auctionType == AUCTION_TYPE.FIXED){
-            if(msg.value == itemsList[item_id].asking_price){
-                itemsList[item_id].final_price = msg.value;
-                itemsList[item_id].bidWinner = Bidder(msg.sender, msg.value, public_key); 
-                itemsList[item_id].status = ITEM_STATUS.BUYING;
-                itemsList[item_id].auctionStatus = AUCTION_STATUS.REVEALED;   // everything is done 
-            }
-            else{
-                revert("Invalid Price");
-            }
-        }
-        else{
-            bytes32 hashValue = keccak256(
-                abi.encodePacked(password, uintToStr(msg.value))
-            );
-            if(itemsList[item_id].hashedBids[hashValue] != true){
-                revert("Invalid details");
-            }
-
-            itemsList[item_id].verifiedBids.push(
-                Bidder(msg.sender, msg.value, public_key)
-            );
-            itemsList[item_id].isVerified[msg.sender] = true;
-        }
-
+    function setMaruthiManufacturer(
+        string memory Name,
+        string memory Tyres,
+        string memory Body
+    ) public {
+        MaruthiManufacturer.name = Name;
+        MaruthiManufacturer.supplierForTyres = Tyres;
+        MaruthiManufacturer.supplierForBody = Body;
+        MaruthiManufacturer.manufacturerAddress = msg.sender;
     }
 
-    function abs(uint256 a, uint256 b) private pure returns (uint256) {
-        if (a >= b) {
-            return a - b;
-        } else {
-            return b - a;
-        }
+    function setVedanthaSupplier(string memory Name) public {
+        carBodySupplier.name = Name;
+        carBodySupplier.carBodySupplierAddress = msg.sender;
     }
 
-    function revealBid(uint256 item_id) public payable onlyItemSeller(item_id){
+    function setMrfSupplier(string memory Name, string memory SuppliesTo)
+        public
+    {
+        MrfCarTyreSupplier.name = Name;
+        MrfCarTyreSupplier.suppliesTo = SuppliesTo;
+        MrfCarTyreSupplier.carTyreSupplierAddress = msg.sender;
+    }
+
+    function setCeatSupplier(string memory Name, string memory SuppliesTo)
+        public
+    {
+        CeatCarTyreSupplier.name = Name;
+        CeatCarTyreSupplier.suppliesTo = SuppliesTo;
+        CeatCarTyreSupplier.carTyreSupplierAddress = msg.sender;
+    }
+
+    // Setting supplier limits for tyres------------------------------------------------------
+    // the 6 functions below have been tested
+
+    function setCarTyreSupplierLimit_MRF(uint256 limit) public {
         require(
-            item_id <= itemsCount && item_id > 0,
-            "Item not present in list"
+            msg.sender == MrfCarTyreSupplier.carTyreSupplierAddress,
+            "Only MRF supplier can set the limit"
         );
+        CarTyreSupplierLimit_MRF = limit;
+    }
+
+    function viewCarTyreSupplierLimit_MRF() public view returns (uint256) {
+        return CarTyreSupplierLimit_MRF;
+    }
+
+    function setCarTyreSupplierLimit_CEAT(uint256 limit) public {
         require(
-            itemsList[item_id].auctionStatus == AUCTION_STATUS.VERIFICATION,
-            "Bid verification not in progress"
+            msg.sender == CeatCarTyreSupplier.carTyreSupplierAddress,
+            "Only CEAT supplier can set the limit"
         );
+        CarTyreSupplierLimit_CEAT = limit;
+    }
+
+    function viewCarTyreSupplierLimit_CEAT() public view returns (uint256) {
+        return CarTyreSupplierLimit_CEAT;
+    }
+
+    function SetCarBodySupplyLimit_VEDANTHA(uint256 limit) public {
         require(
-            itemsList[item_id].verifiedBids.length > 0,
-            "No one verified bid"
+            msg.sender == carBodySupplier.carBodySupplierAddress,
+            "Only VEDANTHA supplier can set the limit"
         );
+        CarBodySupplierLimit_VEDANTHA = limit;
+    }
 
-        if(itemsList[item_id].auctionType == AUCTION_TYPE.SECOND_PRICE) {
-            require(
-                itemsList[item_id].verifiedBids.length >= 2,
-                "Atleast two people should verify for vickery auction"
-            );  
-        }
+    function viewCarBodySupplyLimit_VEDANTHA() public view returns (uint256) {
+        return CarBodySupplierLimit_VEDANTHA;
+    }
 
-        uint256 maxBid = 0;
-        Bidder memory maxBidder;
-        uint256 secondMaxBid = 0;
-        uint256 totalBid = 0;
+    // car body counting------------------------------------------------------------
+    // two functions below are tested
 
-        for (uint256 i = 0; i < itemsList[item_id].verifiedBids.length; i++) {
-            uint256 currentBidPrice = itemsList[item_id].verifiedBids[i].price;
-            totalBid += currentBidPrice;
-            if (currentBidPrice > maxBid) {
-                secondMaxBid = maxBid;
-                maxBid = currentBidPrice;
-                maxBidder = itemsList[item_id].verifiedBids[i];
-            } else if (currentBidPrice > secondMaxBid) {
-                secondMaxBid = currentBidPrice;
-            }
-        }
+    function numberOfCarBodiesNeeded_TATA() public view returns (uint256) {
+        return CarTyreSupplierLimit_MRF / 4;
+    }
 
-        if (itemsList[item_id].auctionType == AUCTION_TYPE.FIRST_PRICE) {
-            itemsList[item_id].bidWinner = maxBidder;
-            itemsList[item_id].final_price = maxBid;
-        } else if (
-            itemsList[item_id].auctionType == AUCTION_TYPE.SECOND_PRICE
+    function numberOfCarBodiesNeeded_MARUTHI() public view returns (uint256) {
+        return CarTyreSupplierLimit_CEAT / 4;
+    }
+}
+
+//Bidding contract------------------------------------------------------------------
+
+contract BidForCarBodies is MyContract {
+    enum BidResult {
+        WON,
+        LOST
+    }
+
+    BidResult tataResult;
+    BidResult maruthiResult;
+
+    struct Bid {
+        uint256 quantity;
+        uint256 amount;
+    }
+
+    uint256 carBodiesWonInAuction_TATA = 0;
+    uint256 carBodiesWonInAuction_MARUTHI = 0;
+
+    //placing for bids
+
+    Bid CarBodySupplierBid_VEDANTHA;
+    Bid CarTyreSupplierBid_MRF;
+    Bid CarTyreSupplierBid_CEAT;
+    Bid CarBodyManufacturerBid_TATA;
+    Bid CarBodyManufacturerBid_MARUTHI;
+    Bid CarTyreManufacturerBid_TATA;
+    Bid CarTyreManufacturerBid_MARUTHI;
+
+    //Supplier Bid Functions --------------------- Input ---------------------- And Outputs -----------------------
+    function carBodySupplierBid(uint256 amount) public OnlyCarBodySupplier {
+        CarBodySupplierBid_VEDANTHA = Bid(
+            CarBodySupplierLimit_VEDANTHA,
+            amount
+        );
+    }
+
+    function viewCarBodySupplierBid() public view returns (Bid memory) {
+        return CarBodySupplierBid_VEDANTHA;
+    }
+
+    function carTyreSupplierBid_MRF(uint256 amount) public {
+        CarTyreSupplierBid_MRF = Bid(CarTyreSupplierLimit_MRF, amount);
+    }
+
+    function viewCarTyreSupplierBid_MRF() public view returns (Bid memory) {
+        return CarTyreSupplierBid_MRF;
+    }
+
+    function carTyreSupplierBid_CEAT(uint256 amount) public {
+        CarTyreSupplierBid_CEAT = Bid(CarTyreSupplierLimit_CEAT, amount);
+    }
+
+    function viewCarTyreSupplierBid_CEAT() public view returns (Bid memory) {
+        return CarTyreSupplierBid_CEAT;
+    }
+
+    //Manufacturer Bid Functions --------------------- Input ---------------------- And Outputs -----------------------
+
+    function carBodyManufacturerBid_TATA(string memory hashedTyreBid, string memory hashedCarBodyBid)
+        public
+        OnlyTATA
+    {
+        TataManufacturer.hashedCarBodyBid = hashedCarBodyBid;
+        TataManufacturer.hashedTyreBid = hashedTyreBid;
+    }
+
+    function viewCarBodyManufacturerBid_TATA()
+        public
+        view
+        returns (Bid memory)
+    {
+        return CarBodyManufacturerBid_TATA;
+    }
+
+    function carBodyManufacturerBid_MARUTHI(uint256 quantity, uint256 amount)
+        public
+        OnlyMaruti
+    {
+        CarBodyManufacturerBid_MARUTHI = Bid(quantity, amount);
+    }
+
+    function viewCarBodyManufacturerBid_MARUTHI()
+        public
+        view
+        returns (Bid memory)
+    {
+        return CarBodyManufacturerBid_MARUTHI;
+    }
+
+    //Tyre Manufacturer Bid Functions --------------------- Input ---------------------- And Outputs -----------------------
+
+    function carTyreManufacturerBid_TATA(uint256 quantity, uint256 amount)
+        public
+        OnlyTATA
+    {
+        CarTyreManufacturerBid_TATA = Bid(quantity, amount);
+    }
+
+    function viewCarTyreManufacturerBid_TATA()
+        public
+        view
+        returns (Bid memory)
+    {
+        return CarTyreManufacturerBid_TATA;
+    }
+
+    function carTyreManufacturerBid_MARUTHI(uint256 quantity, uint256 amount)
+        public
+        OnlyMaruti
+    {
+        CarTyreManufacturerBid_MARUTHI = Bid(quantity, amount);
+    }
+
+    function viewCarTyreManufacturerBid_MARUTHI()
+        public
+        view
+        returns (Bid memory)
+    {
+        return CarTyreManufacturerBid_MARUTHI;
+    }
+
+    //Bidding Function ---------------------------------------------
+    function biddingForCarBody() public {
+        uint256 carBodiesLeftForSupplier_VEDANTHA;
+
+        if (
+            CarBodyManufacturerBid_TATA.quantity >
+            CarBodySupplierBid_VEDANTHA.quantity &&
+            CarBodyManufacturerBid_MARUTHI.quantity >
+            CarBodySupplierBid_VEDANTHA.quantity
         ) {
-            itemsList[item_id].bidWinner = maxBidder;
-            itemsList[item_id].final_price = secondMaxBid;
-        } else if(itemsList[item_id].auctionType == AUCTION_TYPE.AVG_PRICE) {
-            uint256 minDiff = uint256(-1);
-            Bidder memory avgBidder;
-            uint256 n = itemsList[item_id].verifiedBids.length;
-            for (uint256 i = 0; i < n; i++) {
-                uint256 currentBidPrice = itemsList[item_id]
-                    .verifiedBids[i]
-                    .price * n;
-                if (abs(currentBidPrice, totalBid) < minDiff) {
-                    avgBidder = itemsList[item_id].verifiedBids[i];
-                    minDiff = abs(currentBidPrice, totalBid); 
-                }
-
-                itemsList[item_id].bidWinner = avgBidder;
-                itemsList[item_id].final_price = avgBidder.price;
-            }
-        } else{
-            // normal purchase, do nothing
-        }
-
-        itemsList[item_id].status = ITEM_STATUS.BUYING;
-        itemsList[item_id].auctionStatus = AUCTION_STATUS.REVEALED;
-        returnNonWinnerMoney(item_id);
-    }
-
-    /**
-     * Gets public key of the buyer from the item being bought
-     * Used by: Seller
-     *
-     * @param item_id unique id of item
-     */
-    function getKey(uint256 item_id)
-        public
-        view
-        onlyItemSeller(item_id)
-        returns (string memory)
-    {
-        require(
-            itemsList[item_id].status == ITEM_STATUS.BUYING,
-            "KEY NOT AVAILABLE"
-        );
-        return itemsList[item_id].bidWinner.public_key;
-    }
-
-    /**
-     * Assigns encrypted password to the item which can be only decrypted
-     * by the buyer
-     * Thus, it simulates delivery of the screen (item) from the seller
-     * Item is marked as BOUGHT
-     * Used by: Seller
-     *
-     * @param item_id unique id of item
-     * @param secret_string Encrypted password of the screen (i.e.
-     *                           item) along with the public key of the buyer
-     */
-    function giveAccess(uint256 item_id, string memory secret_string)
-        public
-        payable
-        onlyItemSeller(item_id)
-    {
-        require(
-            itemsList[item_id].status == ITEM_STATUS.BUYING,
-            "Item not purchased yet"
-        );
-        itemsList[item_id].secret_string = secret_string;
-        itemsList[item_id].status = ITEM_STATUS.BOUGHT;
-        itemsList[item_id].seller.transfer(itemsList[item_id].final_price);
-        // return pending money of bid winner like in case of auction type 2
-        returnWinnerPendingMoney(item_id);
-    }
-
-    function returnWinnerPendingMoney(uint256 item_id) private {
-        uint256 pendingMoney = itemsList[item_id].bidWinner.price -
-            itemsList[item_id].final_price;
-        itemsList[item_id].bidWinner.buyer.transfer(pendingMoney);
-    }
-
-    function returnNonWinnerMoney(uint256 item_id) private {
-        for (uint256 i = 0; i < itemsList[item_id].verifiedBids.length; i++) {
+            tataResult = BidResult.LOST;
+            maruthiResult = BidResult.LOST;
+            carBodiesWonInAuction_TATA = 0;
+            carBodiesWonInAuction_MARUTHI = 0;
+        } else {
             if (
-                itemsList[item_id].verifiedBids[i].buyer ==
-                itemsList[item_id].bidWinner.buyer
+                CarBodyManufacturerBid_MARUTHI.quantity >
+                CarBodySupplierBid_VEDANTHA.quantity &&
+                CarBodyManufacturerBid_TATA.quantity <=
+                CarBodySupplierBid_VEDANTHA.quantity
             ) {
-                continue;
-            }
+                tataResult = BidResult.WON;
+                maruthiResult = BidResult.LOST;
+                carBodiesWonInAuction_TATA = CarBodyManufacturerBid_TATA
+                    .quantity;
+                carBodiesWonInAuction_MARUTHI = 0;
+            } else if (
+                CarBodyManufacturerBid_MARUTHI.quantity <=
+                CarBodySupplierBid_VEDANTHA.quantity &&
+                CarBodyManufacturerBid_TATA.quantity >
+                CarBodySupplierBid_VEDANTHA.quantity
+            ) {
+                tataResult = BidResult.LOST;
+                maruthiResult = BidResult.WON;
+                carBodiesWonInAuction_TATA = 0;
+                carBodiesWonInAuction_MARUTHI = CarBodyManufacturerBid_MARUTHI
+                    .quantity;
+            } else if (
+                CarBodyManufacturerBid_MARUTHI.quantity <
+                CarBodySupplierBid_VEDANTHA.quantity &&
+                CarBodyManufacturerBid_TATA.quantity <
+                CarBodySupplierBid_VEDANTHA.quantity
+            ) {
+                if (
+                    CarBodyManufacturerBid_MARUTHI.quantity >
+                    NumberOfCarBodiesNeeded_MARUTHI &&
+                    CarBodyManufacturerBid_TATA.quantity >
+                    NumberOfCarBodiesNeeded_TATA
+                ) {
+                    //check the algorithm for this-------------------------------------------------------------------------------------------------------
+                    if (
+                        CarBodyManufacturerBid_MARUTHI.quantity +
+                            CarBodyManufacturerBid_TATA.quantity <=
+                        CarBodySupplierBid_VEDANTHA.quantity
+                    ) {
+                        tataResult = BidResult.WON;
+                        maruthiResult = BidResult.WON;
+                        carBodiesWonInAuction_TATA = CarBodyManufacturerBid_TATA
+                            .quantity;
+                        carBodiesWonInAuction_MARUTHI = CarBodyManufacturerBid_MARUTHI
+                            .quantity;
+                    } else if (
+                        NumberOfCarBodiesNeeded_MARUTHI +
+                            NumberOfCarBodiesNeeded_TATA <=
+                        CarBodySupplierBid_VEDANTHA.quantity
+                    ) {
+                        tataResult = BidResult.WON;
+                        maruthiResult = BidResult.WON;
+                        carBodiesWonInAuction_TATA = NumberOfCarBodiesNeeded_TATA;
+                        carBodiesWonInAuction_MARUTHI = NumberOfCarBodiesNeeded_MARUTHI;
 
-            uint256 returnPrice = itemsList[item_id].verifiedBids[i].price;
-            itemsList[item_id].verifiedBids[i].buyer.transfer(returnPrice);
-        }
-    }
+                        carBodiesLeftForSupplier_VEDANTHA =
+                            CarBodySupplierBid_VEDANTHA.quantity -
+                            NumberOfCarBodiesNeeded_TATA -
+                            NumberOfCarBodiesNeeded_MARUTHI;
 
-    /**
-     * @dev View pending balance in escrow account
-     * Used by: Developer
-     *
-     */
-    function getBalance() public view returns (uint256) {
-        return address(this).balance;
-    }
-
-    /**
-     * Returns encrypted password of the delivered item
-     * Used by: Buyer, (optional) Seller
-     *
-     * @param item_id unique id of item
-     */
-    function accessItem(uint256 item_id)
-        public
-        view
-        onlyItemOwnerOrSeller(item_id)
-        returns (string memory)
-    {
-        return itemsList[item_id].secret_string;
-    }
-
-    /**
-     * Updates the name of the item listed in the marketplace
-     * Used by: Seller
-     *
-     * @param item_id unique id of item
-     * @param item_name name of item
-     */
-    function changeName(uint256 item_id, string memory item_name)
-        public
-        onlyItemSeller(item_id)
-    {
-        require(
-            itemsList[item_id].status == ITEM_STATUS.OPEN,
-            "Item is already sold"
-        );
-        itemsList[item_id].status = ITEM_STATUS.LOCKED;
-        itemsList[item_id].item_name = item_name;
-        itemsList[item_id].status = ITEM_STATUS.OPEN;
-    }
-
-    /**
-     * Updates the price of the item listed in the marketplace
-     * Used by: seller
-     *
-     * @param item_id unique id of item
-     * @param price item price
-     */
-    function changePrice(uint256 item_id, uint256 price)
-        public
-        onlyItemSeller(item_id)
-    {
-        require(
-            itemsList[item_id].status == ITEM_STATUS.OPEN,
-            "Item is already sold"
-        );
-        itemsList[item_id].status = ITEM_STATUS.LOCKED;
-        itemsList[item_id].asking_price = price;
-        itemsList[item_id].status = ITEM_STATUS.OPEN;
-    }
-
-    /**
-     * Converts an unsigned integer to its equivalent string
-     *
-     * @param _i number
-     */
-    function uintToStr(uint256 _i)
-        private
-        pure
-        returns (string memory _uintAsString)
-    {
-        uint256 number = _i;
-        if (number == 0) {
-            return "0";
-        }
-        uint256 j = number;
-        uint256 len;
-        while (j != 0) {
-            len++;
-            j /= 10;
-        }
-        bytes memory bstr = new bytes(len);
-        uint256 k = len - 1;
-        while (number != 0) {
-            bstr[k--] = bytes1(uint8(48 + (number % 10)));
-            number /= 10;
-        }
-        return string(bstr);
-    }
-
-    /**
-     * Converts address to string
-     * Source: https://ethereum.stackexchange.com/a/58341
-     *
-     * @param account address of account
-     */
-    function toString(address account) private pure returns (string memory) {
-        return toString(abi.encodePacked(account));
-    }
-
-    function toString(bytes memory data) private pure returns (string memory) {
-        bytes memory alphabet = "0123456789abcdef";
-
-        bytes memory str = new bytes(2 + data.length * 2);
-        str[0] = "0";
-        str[1] = "x";
-        for (uint256 i = 0; i < data.length; i++) {
-            str[2 + i * 2] = alphabet[uint256(uint8(data[i] >> 4))];
-            str[3 + i * 2] = alphabet[uint256(uint8(data[i] & 0x0f))];
-        }
-        return string(str);
-    }
-
-    function printHelper(uint i, bool firstItem) public view returns (string memory) {
-        string memory str = "";
-        uint at = 0;
-        if(itemsList[i].auctionType == AUCTION_TYPE.SECOND_PRICE){
-            at=1;
-        }
-        else if(itemsList[i].auctionType == AUCTION_TYPE.AVG_PRICE){
-            at = 2;
-        }
-        else if(itemsList[i].auctionType == AUCTION_TYPE.FIXED){
-            at = 3;
-        }
-
-        uint ast = 0;
-        if(itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION){
-            ast = 1;
-        }
-        else if(itemsList[i].auctionStatus == AUCTION_STATUS.REVEALED)
-        {
-            ast = 2;
-        }
-        
-        uint ist = 0;
-        if(itemsList[i].status == ITEM_STATUS.OPEN){
-            ist = 1;
-        }
-        else if(itemsList[i].status == ITEM_STATUS.BUYING){
-            ist = 2;
-        }
-        else if(itemsList[i].status == ITEM_STATUS.BOUGHT){
-            ist = 3;
-        }
-        
-        if(!firstItem){
-            str = string(abi.encodePacked(str, ','));    
-        }
-
-        str = string(abi.encodePacked(str, '{"itemId":'));
-        str = string(abi.encodePacked(str, uintToStr(i)));
-        str = string(abi.encodePacked(str, ',"itemName":"'));
-        str = string(abi.encodePacked(str, itemsList[i].item_name));
-        str = string(abi.encodePacked(str, '","itemDescription": "'));
-        str = string(abi.encodePacked(str, itemsList[i].item_desc));
-        str = string(abi.encodePacked(str, '","itemStatus":'));
-        str = string(abi.encodePacked(str, uintToStr(ist)));
-        str = string(abi.encodePacked(str, ',"askingPrice":'));
-        str = string(abi.encodePacked(str, uintToStr(itemsList[i].asking_price)));
-        str = string(abi.encodePacked(str, ',"auctionType":'));
-        str = string(abi.encodePacked(str, uintToStr(at)));
-        str = string(abi.encodePacked(str, ',"auctionStatus":'));
-        str = string(abi.encodePacked(str, uintToStr(ast)));
-        str = string(abi.encodePacked(str, ',"sellerId": "'));
-        str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].seller))));
-        str = string(abi.encodePacked(str, '","alreadyBid": "'));
-        str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidders[msg.sender]))));
-        str = string(abi.encodePacked(str, '","bidWinner": "'));
-        str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].bidWinner.buyer))));
-        str = string(abi.encodePacked(str, '","isVerified": "'));
-        str = string(abi.encodePacked(str,toString(abi.encodePacked(itemsList[i].isVerified[msg.sender]))));
-        str = string(abi.encodePacked(str, '"}'));
-        return str;
-    }
-
-    /**
-     * Returns the items present in the marketplace, which are
-     * ready to be sold
-     * Used by: public
-     *
-     */
-    function viewActiveListings(bool allItems) public view returns (string memory) {
-        string memory str = "[";
-        bool firstItem = true;
-
-        for (uint256 i = 1; i <= itemsCount; i++) {
-            if (allItems || itemsList[i].auctionStatus == AUCTION_STATUS.ONGOING || 
-                (itemsList[i].auctionStatus == AUCTION_STATUS.VERIFICATION && itemsList[i].auctionType == AUCTION_TYPE.FIXED)) {
-                str = string(abi.encodePacked(str, printHelper(i, firstItem)));
-                firstItem = false;
+                        if (carBodiesLeftForSupplier_VEDANTHA != 0) {
+                            if (
+                                CarBodyManufacturerBid_MARUTHI.amount >
+                                CarBodyManufacturerBid_TATA.quantity
+                            ) {
+                                carBodiesWonInAuction_MARUTHI += carBodiesLeftForSupplier_VEDANTHA;
+                            } else {
+                                carBodiesWonInAuction_TATA += carBodiesLeftForSupplier_VEDANTHA;
+                            }
+                        } else {
+                            tataResult = BidResult.WON;
+                            maruthiResult = BidResult.LOST;
+                            carBodiesWonInAuction_TATA = CarBodyManufacturerBid_TATA
+                                .quantity;
+                            carBodiesWonInAuction_MARUTHI =
+                                CarBodySupplierBid_VEDANTHA.quantity -
+                                CarBodyManufacturerBid_TATA.quantity;
+                        }
+                    }
+                } else {
+                    if (
+                        CarBodyManufacturerBid_MARUTHI.amount >
+                        CarBodyManufacturerBid_TATA.quantity
+                    ) {
+                        tataResult = BidResult.LOST;
+                        maruthiResult = BidResult.WON;
+                        carBodiesWonInAuction_TATA =
+                            CarBodySupplierBid_VEDANTHA.quantity -
+                            CarBodyManufacturerBid_MARUTHI.quantity;
+                        carBodiesWonInAuction_MARUTHI = CarBodyManufacturerBid_MARUTHI
+                            .quantity;
+                    } else {
+                        tataResult = BidResult.WON;
+                        maruthiResult = BidResult.LOST;
+                        carBodiesWonInAuction_TATA = CarBodyManufacturerBid_TATA
+                            .quantity;
+                        carBodiesWonInAuction_MARUTHI =
+                            CarBodySupplierBid_VEDANTHA.quantity -
+                            CarBodyManufacturerBid_TATA.quantity;
+                    }
+                }
+            } else if (
+                CarBodyManufacturerBid_MARUTHI.quantity >
+                NumberOfCarBodiesNeeded_MARUTHI &&
+                NumberOfCarBodiesNeeded_TATA == NumberOfCarBodiesNeeded_TATA
+            ) {
+                tataResult = BidResult.WON;
+                maruthiResult = BidResult.LOST;
+                carBodiesWonInAuction_TATA = CarBodyManufacturerBid_TATA
+                    .quantity;
+                carBodiesWonInAuction_MARUTHI =
+                    CarBodySupplierBid_VEDANTHA.quantity -
+                    CarBodyManufacturerBid_TATA.quantity;
+            } else if (
+                CarBodyManufacturerBid_MARUTHI.quantity ==
+                NumberOfCarBodiesNeeded_MARUTHI &&
+                CarBodyManufacturerBid_TATA.quantity >
+                NumberOfCarBodiesNeeded_TATA
+            ) {
+                tataResult = BidResult.LOST;
+                maruthiResult = BidResult.WON;
+                carBodiesWonInAuction_TATA =
+                    CarBodySupplierBid_VEDANTHA.quantity -
+                    CarBodyManufacturerBid_MARUTHI.quantity;
+                carBodiesWonInAuction_MARUTHI = CarBodyManufacturerBid_MARUTHI
+                    .quantity;
+            } else if (
+                (CarBodyManufacturerBid_MARUTHI.quantity ==
+                    NumberOfCarBodiesNeeded_MARUTHI &&
+                    CarBodyManufacturerBid_TATA.quantity ==
+                    NumberOfCarBodiesNeeded_TATA) ||
+                (CarBodyManufacturerBid_MARUTHI.quantity <
+                    NumberOfCarBodiesNeeded_MARUTHI &&
+                    CarBodyManufacturerBid_TATA.quantity ==
+                    NumberOfCarBodiesNeeded_TATA) ||
+                (CarBodyManufacturerBid_MARUTHI.quantity ==
+                    NumberOfCarBodiesNeeded_MARUTHI &&
+                    CarBodyManufacturerBid_TATA.quantity <
+                    NumberOfCarBodiesNeeded_TATA) ||
+                (CarBodyManufacturerBid_MARUTHI.quantity <
+                    NumberOfCarBodiesNeeded_MARUTHI &&
+                    CarBodyManufacturerBid_TATA.quantity <
+                    NumberOfCarBodiesNeeded_TATA)
+            ) {
+                if (
+                    CarBodyManufacturerBid_MARUTHI.amount >
+                    CarBodyManufacturerBid_TATA.quantity
+                ) {
+                    tataResult = BidResult.LOST;
+                    maruthiResult = BidResult.WON;
+                    carBodiesWonInAuction_TATA =
+                        CarBodySupplierBid_VEDANTHA.quantity -
+                        CarBodyManufacturerBid_MARUTHI.quantity;
+                    carBodiesWonInAuction_MARUTHI = CarBodyManufacturerBid_MARUTHI
+                        .quantity;
+                } else {
+                    tataResult = BidResult.WON;
+                    maruthiResult = BidResult.LOST;
+                    carBodiesWonInAuction_TATA = CarBodyManufacturerBid_TATA
+                        .quantity;
+                    carBodiesWonInAuction_MARUTHI =
+                        CarBodySupplierBid_VEDANTHA.quantity -
+                        CarBodyManufacturerBid_TATA.quantity;
+                }
             }
         }
-        str = string(abi.encodePacked(str, "]"));
-        return str;
     }
 
-    function viewSellerListings(address seller_id) public view returns (string memory) {
-        string memory str = "[";
-        bool firstItem = true;
-        for (uint256 i = 1; i <= itemsCount; i++) {
-            if (itemsList[i].seller == seller_id) {
-                str = string(abi.encodePacked(str, printHelper(i, firstItem)));
-                firstItem = false;
-            }
-        }
-        str = string(abi.encodePacked(str, "]"));
-        return str;
-    }    
+    function viewBidResult() public view returns (BidResult, BidResult) {
+        return (tataResult, maruthiResult);
+    }
 }
